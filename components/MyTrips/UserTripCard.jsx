@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import moment from 'moment';
-import { Text, TouchableOpacity, View, Image } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
+import { Image } from 'expo-image';
 import { useState } from 'react';
 import Colors from '../../constants/Colors';
 
@@ -52,14 +53,15 @@ export default function UserTripCard({ trip, onDelete, index = 0, onPress }) {
           <Image
             source={{ uri: imageUrl }}
             style={{ width: 75, height: 75 }}
-            resizeMode="cover"
+            contentFit="cover"
+            transition={200}
             onError={() => setImageError(true)}
           />
         ) : (
           <Image
             source={require('../../assets/images/dubai.jpg')}
             style={{ width: 75, height: 75 }}
-            resizeMode="cover"
+            contentFit="cover"
           />
         )}
       </View>

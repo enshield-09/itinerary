@@ -40,19 +40,21 @@ export default function SelectDates() {
   }, []);
 
   const saveTripData = async (start, end, days) => {
-    const tripDataObj = {
-      ...tripData,
-      startDate: start.toISOString(),
-      endDate: end.toISOString(),
-      totalNoOfDays: days
-    };
-    try {
-      await AsyncStorage.setItem('tripData', JSON.stringify(tripDataObj));
-      console.log('Saved tripData:', tripDataObj);
-      setTripData(tripDataObj);
-    } catch (e) {
-      console.log('Error saving tripData', e);
-    }
+    setTripData(prev => {
+      const newData = {
+        ...prev,
+        startDate: start.toISOString(),
+        endDate: end.toISOString(),
+        totalNoOfDays: days
+      };
+
+      // Save to local storage asynchronously
+      AsyncStorage.setItem('tripData', JSON.stringify(newData))
+        .then(() => console.log('Saved tripData:', newData))
+        .catch(e => console.log('Error saving tripData', e));
+
+      return newData;
+    });
   };
 
   const onContinue = () => {
@@ -63,11 +65,8 @@ export default function SelectDates() {
     const diffTime = Math.abs(range.endDate.getTime() - range.startDate.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) - 1;
     saveTripData(range.startDate, range.endDate, diffDays);
-    router.push('/create-trip/select-budget', {
-      start: range.startDate.toISOString(),
-      end: range.endDate.toISOString(),
-      totalDays: diffDays
-    });
+
+    router.push('/create-trip/select-budget');
   };
 
   const today = new Date();

@@ -23,12 +23,17 @@ export default function SelectTraveler() {
     })
   }, [])
 
-  useEffect(() => {
-    if (selectedTraveler?.title) {
-      setTripData({ ...tripData, traveler: selectedTraveler.title });
+  const onContinue = () => {
+    if (!selectedTraveler) {
+      // You might want to add an Alert here/toast
+      return;
     }
-  }, [selectedTraveler]);
-
+    setTripData(prev => ({
+      ...prev,
+      traveler: selectedTraveler
+    }));
+    router.push('/create-trip/select-dates');
+  };
 
   const backgrounds = [
     require('../../assets/images/traveler1.jpg'),
@@ -104,11 +109,9 @@ export default function SelectTraveler() {
 
         <TouchableOpacity
           style={styles.continueBtn}
+          onPress={onContinue}
         >
-          <Link href={'/create-trip/select-dates'}
-            style={{ width: '100%', textAlign: 'center' }}>
-            <Text style={styles.continueText}>Continue</Text>
-          </Link>
+          <Text style={styles.continueText}>Continue</Text>
         </TouchableOpacity>
       </View>
     </View>

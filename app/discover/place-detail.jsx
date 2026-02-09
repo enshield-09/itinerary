@@ -205,19 +205,20 @@ export default function PlaceDetail() {
         {images.length > 0 && (
           <View style={styles.gallerySection}>
             <Text style={styles.sectionTitle}>Gallery</Text>
-            <FlatList
+            <ScrollView
               horizontal
-              data={images}
-              keyExtractor={(item, index) => `img_${index}`}
               showsHorizontalScrollIndicator={false}
-              renderItem={({ item }) => (
+              style={styles.galleryScroll}
+            >
+              {images.map((img, index) => (
                 <Image
-                  source={{ uri: item }}
+                  key={index}
+                  source={{ uri: img }}
                   style={styles.galleryImage}
                   contentFit="cover"
                 />
-              )}
-            />
+              ))}
+            </ScrollView>
           </View>
         )}
 

@@ -2,45 +2,30 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { useEffect, useState, useRef, useContext } from 'react';
-import { ActivityIndicator, Alert, Linking, ScrollView, StyleSheet, Text, View, Image, Animated, Easing, TouchableOpacity, TextInput } from 'react-native';
+import { ActivityIndicator, Alert, Linking, ScrollView, StyleSheet, Text, View, Animated, Easing, TouchableOpacity, TextInput } from 'react-native';
 import { db } from '../../configs/FirebaseConfig';
 import Colors from '../../constants/Colors';
 import { LinearGradient } from 'expo-linear-gradient';
 import EditTripItemModal from '../../components/TripDetails/EditTripItemModal';
 import EditTripSettingsModal from '../../components/TripDetails/EditTripSettingsModal';
 import { CreateTripContext } from '../../context/CreateTripContext';
+import { Image } from 'expo-image';
 
 // Fallback images
 const FALLBACK_HOTEL = require('../../assets/images/hotel.jpg');
 const FALLBACK_ACTIVITY = require('../../assets/images/cultural.jpg');
 
 // Custom Network Image Component with Local Fallback + Overlay
-const NetworkImage = ({ uri, fallback, style, resizeMode = 'cover' }) => {
-  const [loaded, setLoaded] = useState(false);
-  const [error, setError] = useState(false);
-
+const NetworkImage = ({ uri, fallback, style, contentFit = 'cover' }) => {
   return (
     <View style={[style, { overflow: 'hidden', backgroundColor: '#f0f0f0' }]}>
-      {/* 1. Always show fallback first */}
       <Image
-        source={fallback}
-        style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]}
-        resizeMode={resizeMode}
+        source={uri ? { uri } : fallback}
+        placeholder={fallback}
+        style={{ width: '100%', height: '100%' }}
+        contentFit={contentFit}
+        transition={300}
       />
-
-      {/* 2. Overlay network image when loaded */}
-      {uri && !error && (
-        <Image
-          source={{ uri }}
-          style={[
-            StyleSheet.absoluteFill,
-            { width: '100%', height: '100%', opacity: loaded ? 1 : 0 }
-          ]}
-          resizeMode={resizeMode}
-          onLoad={() => setLoaded(true)}
-          onError={() => setError(true)}
-        />
-      )}
     </View>
   );
 };

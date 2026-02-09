@@ -157,7 +157,7 @@ export default function GenerateTrip() {
         router.replace({ pathname: '/trip-details', params: { docId } });
       } else {
         await setDoc(doc(db, "ItineraryApp", docId), saveData);
-        router.replace('/mytrip');
+        router.replace({ pathname: '/trip-details', params: { docId } });
       }
 
     } catch (err) {
@@ -208,9 +208,10 @@ export default function GenerateTrip() {
         style={{
           width: '100%',
           height: 300,
-          objectFit: 'contain',
           marginVertical: 20
-        }} />
+        }}
+        contentFit="contain" // Fixed prop name
+      />
       <Text style={{
         fontFamily: 'outfit',
         fontSize: 18,

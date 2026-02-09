@@ -114,21 +114,15 @@ export default function SelectAttractions() {
         <View style={{ marginTop: 25 }}>
           <Text style={styles.subtitle}>Choose your attraction for trip</Text>
 
-          <FlatList
-            data={SelectAttractionOptions}
-            keyExtractor={item => item.id.toString()}
-            extraData={selectedAttractions}
-            contentContainerStyle={{ paddingBottom: 20 }}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                onPress={() => toggleAttraction(item)}
-                style={{ marginVertical: 16 }}
-              >
-                <OptionCard option={item} selectedOption={selectedAttractions} />
-              </TouchableOpacity>
-            )}
-            scrollEnabled={false} // let outer ScrollView handle scrolling
-          />
+          {SelectAttractionOptions.map((item, index) => (
+            <TouchableOpacity
+              key={item.id}
+              onPress={() => toggleAttraction(item)}
+              style={{ marginVertical: 10 }}
+            >
+              <OptionCard option={item} selectedOption={selectedAttractions} />
+            </TouchableOpacity>
+          ))}
         </View>
 
         <TouchableOpacity

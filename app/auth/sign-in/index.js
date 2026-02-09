@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  ImageBackground,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -18,6 +17,7 @@ import {
 } from 'react-native';
 import { auth } from '../../../configs/FirebaseConfig';
 import Colors from '../../../constants/Colors';
+import { Image } from 'expo-image';
 
 export default function SignIn() {
   const navigation = useNavigation();
@@ -30,12 +30,8 @@ export default function SignIn() {
 
   useEffect(() => {
     try {
-      navigation.setOptions({
-        headerShown: false
-      });
-    } catch (e) {
-      // ignore if not supported
-    }
+      navigation.setOptions({ headerShown: false });
+    } catch (e) { }
   }, [navigation]);
 
   const onSignIn = () => {
@@ -86,12 +82,13 @@ export default function SignIn() {
   };
 
   return (
-    <ImageBackground
-      source={require('./../../../assets/images/signin.jpg')}
-      style={styles.bg}
-      imageStyle={styles.bgImage}
-      resizeMode="cover"
-    >
+    <View style={styles.bg}>
+      <Image
+        source={require('./../../../assets/images/signin.jpg')}
+        style={StyleSheet.absoluteFill}
+        contentFit="cover"
+        transition={500}
+      />
       <View style={styles.overlay} />
 
       <KeyboardAvoidingView
@@ -174,7 +171,7 @@ export default function SignIn() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </ImageBackground>
+    </View>
   );
 }
 

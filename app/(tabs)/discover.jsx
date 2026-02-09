@@ -202,8 +202,10 @@ export default function Discover() {
   };
 
   const handlePackagePress = (pkg) => {
-    setTripData(pkg.tripData);
-    router.push('/create-trip/generate-trip');
+    router.push({
+      pathname: '/discover/package-detail',
+      params: { packageId: pkg.id }
+    });
   };
 
   const handlePopularPlacePress = (place) => {

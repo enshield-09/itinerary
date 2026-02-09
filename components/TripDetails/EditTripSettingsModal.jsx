@@ -149,8 +149,23 @@ export default function EditTripSettingsModal({ visible, onClose, onSave, tripDa
                                 </View>
                             ) : null}
                         </View>
+                        <View style={{ marginBottom: 15, zIndex: 5 }}>
+                            <Text style={styles.label}>Duration (Days)</Text>
+                            <TextInput
+                                style={styles.input}
+                                value={duration}
+                                onChangeText={setDuration}
+                                placeholder="5"
+                                keyboardType="numeric"
+                            />
+                        </View>
 
-                        <ScrollView style={styles.form} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+                        <ScrollView
+                            style={styles.form}
+                            showsVerticalScrollIndicator={false}
+                            keyboardShouldPersistTaps="handled"
+                            contentContainerStyle={{ paddingBottom: 20 }}
+                        >
                             <View style={styles.chipContainer}>
                                 {customAttractions.map((attr, index) => (
                                     <View key={index} style={styles.chip}>
@@ -161,17 +176,6 @@ export default function EditTripSettingsModal({ visible, onClose, onSave, tripDa
                                     </View>
                                 ))}
                             </View>
-
-
-                            {/* Duration */}
-                            <Text style={styles.label}>Duration (Days)</Text>
-                            <TextInput
-                                style={styles.input}
-                                value={duration}
-                                onChangeText={setDuration}
-                                placeholder="5"
-                                keyboardType="number-pad"
-                            />
 
                             {/* Budget */}
                             <Text style={styles.label}>Budget</Text>
