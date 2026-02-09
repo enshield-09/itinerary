@@ -1,0 +1,173 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation, useRouter } from 'expo-router';
+import { useCallback, useContext, useEffect, useState } from 'react';
+import {
+  Dimensions,
+  ImageBackground,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
+import { DatePickerModal } from 'react-native-paper-dates';
+import { Colors } from './../../constants/theme';
+import { CreateTripContext } from './../../context/CreateTripContext';
+
+export default function SelectDates() {
+  const navigation = useNavigation();
+  const router = useRouter();
+  const { tripData, setTripData } = useContext(CreateTripContext);
+
+  const [open, setOpen] = useState(false);
+  const [range, setRange] = useState({ startDate: undefined, endDate: undefined });
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerShown: true,
+      headerTransparent: true,
+      headerTitle: ''
+    });
+  }, [navigation]);
+
+  const onConfirm = useCallback(({ startDate, endDate }) => {
+    setOpen(false);
+    setRange({ startDate, endDate });
+    console.log('Selected range:', startDate, endDate);
+  }, []);
+
+  const onDismiss = useCallback(() => {
+    setOpen(false);
+  }, []);
+
+  const saveTripData = async (start, end, days) => {
+    const tripDataObj = {
+      ...tripData,
+      startDate: start.toISOString(),
+      endDate: end.toISOString(),
+      totalNoOfDays: days
+    };
+    try {
+      await AsyncStorage.setItem('tripData', JSON.stringify(tripDataObj));
+      console.log('Saved tripData:', tripDataObj);
+      setTripData(tripDataObj);
+    } catch (e) {
+      console.log('Error saving tripData', e);
+    }
+  };
+
+  const onContinue = () => {
+    if (!range.startDate || !range.endDate) {
+      alert('Please select both start and end dates.');
+      return;
+    }
+    const diffTime = Math.abs(range.endDate.getTime() - range.startDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) - 1;
+    saveTripData(range.startDate, range.endDate, diffDays);
+    router.push('/create-trip/select-budget', {
+      start: range.startDate.toISOString(),
+      end: range.endDate.toISOString(),
+      totalDays: diffDays
+    });
+  };
+
+  const today = new Date();
+
+  return (
+    <ImageBackground
+      source={require('./../../assets/images/select-dates.jpg')}
+      style={styles.background}
+      resizeMode="cover"
+    >
+      <View style={styles.container}>
+        <Text style={styles.headerText}>Travel Dates</Text>
+
+        <TouchableOpacity
+          onPress={() => setOpen(true)}
+          style={[styles.selectButton, { marginTop: 60 }]}
+        >
+          <Text style={styles.selectButtonText}>
+            {range.startDate && range.endDate
+              ? `From ${range.startDate.toLocaleDateString()} to ${range.endDate.toLocaleDateString()}`
+              : 'Select Travel Dates'}
+          </Text>
+        </TouchableOpacity>
+
+        <DatePickerModal
+          locale="en"
+          mode="range"
+          visible={open}
+          onDismiss={onDismiss}
+          startDate={range.startDate}
+          endDate={range.endDate}
+          onConfirm={onConfirm}
+          validRange={{ startDate: today }}
+        />
+
+        <TouchableOpacity
+          onPress={onContinue}
+          style={styles.continueButton}
+        >
+          <Text style={styles.continueButtonText}>Continue</Text>
+        </TouchableOpacity>
+      </View>
+    </ImageBackground>
+  );
+}
+
+const { width } = Dimensions.get('window');
+
+const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    width: '100%',
+    height: '100%'
+  },
+  container: {
+    flex: 1,
+    padding: 25,
+    paddingTop: 70,
+    paddingBottom: 30,
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    justifyContent: 'space-between'
+  },
+  headerText: {
+    fontFamily: 'outfit-bold',
+    fontSize: 35,
+    marginTop: 20,
+    color: Colors.BLACK
+  },
+  selectButton: {
+    padding: 15,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    backgroundColor: Colors.WHITE,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3
+  },
+  selectButtonText: {
+    fontSize: 18,
+    color: Colors.BLACK,
+    fontFamily: 'outfit-medium'
+  },
+  continueButton: {
+    paddingVertical: 18,
+    backgroundColor: Colors.BLACK,
+    borderRadius: 50,
+    alignItems: 'center',
+    marginTop: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8
+  },
+  continueButtonText: {
+    color: Colors.WHITE,
+    fontFamily: 'outfit-bold',
+    fontSize: 20
+  }
+});
