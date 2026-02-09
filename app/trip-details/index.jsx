@@ -656,22 +656,22 @@ export default function TripDetails() {
           </View>
         </Animated.View>
 
-        <EditTripItemModal
-          visible={modalVisible}
-          onClose={() => setModalVisible(false)}
-          onSave={handleSaveItem}
-          initialData={editingItem}
-          type={itemType}
-        />
-
-        <EditTripSettingsModal
-          visible={settingsModalVisible}
-          onClose={() => setSettingsModalVisible(false)}
-          onSave={handleSaveTripSettings}
-          tripData={tripDetails?.tripData}
-        />
-
       </ScrollView>
+
+      <EditTripItemModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        onSave={handleSaveItem}
+        initialData={editingItem}
+        type={itemType}
+      />
+
+      <EditTripSettingsModal
+        visible={settingsModalVisible}
+        onClose={() => setSettingsModalVisible(false)}
+        onSave={handleSaveTripSettings}
+        tripData={tripDetails?.tripData}
+      />
     </View>
   );
 }

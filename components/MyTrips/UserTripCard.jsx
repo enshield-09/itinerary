@@ -6,7 +6,7 @@ import Colors from '../../constants/Colors';
 
 const API_KEY = 'AIzaSyBNiTVqT-LJpDzl5i2WlVuYtUsK8yMF7Oc';
 
-export default function UserTripCard({ trip, onDelete, index = 0 }) {
+export default function UserTripCard({ trip, onDelete, index = 0, onPress }) {
   const [imageError, setImageError] = useState(false);
 
   if (!trip || !trip.tripData) return null;
@@ -24,19 +24,23 @@ export default function UserTripCard({ trip, onDelete, index = 0 }) {
     : null;
 
   return (
-    <View style={{
-      marginTop: 15,
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: '#fff',
-      padding: 12,
-      borderRadius: 15,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.05,
-      shadowRadius: 5,
-      elevation: 2
-    }}>
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.7}
+      style={{
+        marginTop: 15,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+        padding: 12,
+        borderRadius: 15,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 5,
+        elevation: 2
+      }}
+    >
       <View style={{
         width: 75,
         height: 75,
@@ -91,6 +95,6 @@ export default function UserTripCard({ trip, onDelete, index = 0 }) {
           <Ionicons name="trash-outline" size={20} color={Colors.RED} />
         </TouchableOpacity>
       )}
-    </View>
+    </TouchableOpacity>
   );
 }

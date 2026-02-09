@@ -72,7 +72,7 @@ export default function MyTrip() {
     const trips = [];
     querySnapshot.forEach((doc) => {
       // console.log(doc.id, "=>", doc.data());
-      trips.push(doc.data());
+      trips.push({ ...doc.data(), docId: doc.id });
     });
     setUserTrips(trips);
     setLoading(false);

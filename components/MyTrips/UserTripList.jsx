@@ -138,18 +138,19 @@ export default function UserTripList({ userTrips, onDeleteTrip }) {
     </View>
   );
 
-  // 2. Optimization: Use FlatList instead of ScrollView
+  // 2. Optimization: Revert to Map to avoid nested VirtualizedList error
   return (
     <View style={{ flex: 1, paddingBottom: 20 }}>
-      <FlatList
-        data={parsedTrips}
-        keyExtractor={(item) => item.docId}
-        renderItem={({ item, index }) => (
-          <UserTripCard trip={item} index={index} onDelete={onDeleteTrip ? () => onDeleteTrip(item.docId) : null} />
-        )}
-        ListHeaderComponent={renderHeader}
-        showsVerticalScrollIndicator={false}
-      />
+      {renderHeader()}
+      {parsedTrips.map((item, index) => (
+        <UserTripCard
+          key={item.docId}
+          trip={item}
+          index={index}
+          onDelete={onDeleteTrip ? () => onDeleteTrip(item.docId) : null}
+          onPress={() => router.push({ pathname: '/trip-details', params: { docId: item.docId } })}
+        />
+      ))}
     </View>
   );
 }
