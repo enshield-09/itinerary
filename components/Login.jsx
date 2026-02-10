@@ -11,12 +11,14 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
 
 const { width, height } = Dimensions.get('window');
 const AnimatedImageBackground = Animated.createAnimatedComponent(ImageBackground);
 
 export default function Login({ user }) {
   const router = useRouter();
+  const { colors, theme } = useTheme();
 
   // local images - ensure these exist in assets/images
   const images = useMemo(() => [
@@ -71,7 +73,7 @@ export default function Login({ user }) {
   }, [images.length, fadeAnim, scaleAnim]);
 
   return (
-    <View style={styles.wrapper}>
+    <View style={[styles.wrapper, { backgroundColor: colors.background }]}>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
       <Animated.View style={{ flex: 1, transform: [{ scale: scaleAnim }] }}>
         <AnimatedImageBackground
@@ -83,15 +85,15 @@ export default function Login({ user }) {
           {/* semi-transparent dark overlay for contrast */}
           <View style={styles.overlay} />
 
-          <View style={styles.card}>
-            <Text style={styles.title}>Itinerary AI</Text>
+          <View style={[styles.card, { backgroundColor: theme === 'dark' ? 'rgba(30, 30, 30, 0.95)' : 'rgba(255, 255, 255, 0.92)' }]}>
+            <Text style={[styles.title, { color: colors.text }]}>Itinerary AI</Text>
 
-            <Text style={styles.subtitle}>
+            <Text style={[styles.subtitle, { color: colors.text }]}>
               Discover your next adventure effortlessly. Personalized itineraries at your fingertips.
             </Text>
 
             <TouchableOpacity
-              style={styles.cta}
+              style={[styles.cta, { backgroundColor: Colors.PRIMARY }]}
               onPress={() => {
                 if (user) {
                   router.push('/mytrip');
@@ -115,7 +117,6 @@ export default function Login({ user }) {
 const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
-    backgroundColor: Colors.WHITE,
   },
   bg: {
     width: '100%',           // explicit full width as requested
@@ -131,7 +132,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.35)',
   },
   card: {
-    backgroundColor: 'rgba(255, 255, 255, 0.92)',
     borderTopLeftRadius: 40,
     borderTopRightRadius: 40,
     padding: 30,
@@ -148,21 +148,18 @@ const styles = StyleSheet.create({
     fontFamily: 'outfit-bold',
     fontSize: 44,
     textAlign: 'center',
-    color: '#000',
     marginTop: 20
   },
   subtitle: {
     fontFamily: 'outfit',
     fontSize: 17,
     textAlign: 'center',
-    color: Colors.GRAY,
     marginTop: 20,
     lineHeight: 24,
     paddingHorizontal: 15,
   },
   cta: {
     marginTop: 40,
-    backgroundColor: Colors.PRIMARY,
     paddingVertical: 18,
     borderRadius: 20,
     alignItems: 'center',

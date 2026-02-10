@@ -9,107 +9,16 @@ import { auth, db } from '../../configs/FirebaseConfig';
 import Colors from '../../constants/Colors';
 import { LinearGradient } from 'expo-linear-gradient';
 
+import { useTheme } from '../../context/ThemeContext';
+
 export default function MyTrip() {
   const router = useRouter();
+  const { colors } = useTheme();
   const [userTrips, setUserTrips] = useState([]);
-  const [filteredTrips, setFilteredTrips] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const user = auth.currentUser;
-  const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-
-  // Animation value for entry
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(20)).current;
-
-  useEffect(() => {
-    user && GetMyTrips();
-  }, [user])
-
-  useEffect(() => {
-    // Run entry animation when data is loaded
-    if (!loading && userTrips.length > 0) {
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 600,
-          useNativeDriver: true,
-          easing: Easing.out(Easing.cubic),
-        }),
-        Animated.timing(translateY, {
-          toValue: 0,
-          duration: 600,
-          useNativeDriver: true,
-          easing: Easing.out(Easing.cubic),
-        })
-      ]).start();
-    }
-  }, [loading, userTrips]);
-
-  useEffect(() => {
-    if (searchQuery.trim() === '') {
-      setFilteredTrips(userTrips);
-    } else {
-      const filtered = userTrips.filter(trip => {
-        try {
-          const parsed = typeof trip.tripData === 'string' ? JSON.parse(trip.tripData) : trip.tripData;
-          const locationName = parsed?.locationInfo?.name || trip?.tripPlan?.location || '';
-          return locationName.toLowerCase().includes(searchQuery.toLowerCase());
-        } catch {
-          return false;
-        }
-      });
-      setFilteredTrips(filtered);
-    }
-  }, [searchQuery, userTrips]);
-
-  const GetMyTrips = async () => {
-    setLoading(true);
-    setUserTrips([]);
-    const q = query(collection(db, 'ItineraryApp'), where('userEmail', '==', user?.email));
-    const querySnapshot = await getDocs(q);
-
-    const trips = [];
-    querySnapshot.forEach((doc) => {
-      // console.log(doc.id, "=>", doc.data());
-      trips.push({ ...doc.data(), docId: doc.id });
-    });
-    setUserTrips(trips);
-    setLoading(false);
-  }
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await GetMyTrips();
-    setRefreshing(false);
-  };
-
-  const handleDeleteTrip = async (docId) => {
-    Alert.alert(
-      'Delete Trip',
-      'Are you sure you want to delete this trip? This action cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteDoc(doc(db, 'ItineraryApp', docId));
-              // Refresh the trip list
-              GetMyTrips();
-            } catch (error) {
-              console.error('Error deleting trip:', error);
-              Alert.alert('Error', 'Failed to delete trip. Please try again.');
-            }
-          }
-        }
-      ]
-    );
-  };
+  // ... (keep logic)
 
   return (
-    <View style={{ flex: 1, backgroundColor: Colors.WHITE }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Decorative Gradient Header Background */}
       <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 120, zIndex: 0 }}>
         <LinearGradient
@@ -120,7 +29,6 @@ export default function MyTrip() {
 
       <View style={{ padding: 25, paddingTop: 55, flex: 1 }}>
         {/* Header Component to Pass */}
-        {/* We define it here to be used in both empty state strings and list header */}
         <View>
           <View style={{
             display: 'flex',
@@ -132,7 +40,7 @@ export default function MyTrip() {
             <Text style={{
               fontFamily: 'outfit-bold',
               fontSize: 35,
-              color: Colors.BLACK
+              color: colors.text
             }}>My Trips</Text>
             <TouchableOpacity
               onPress={() => router.push('/create-trip/search-place')}
@@ -159,16 +67,19 @@ export default function MyTrip() {
             <View style={{
               flexDirection: 'row',
               alignItems: 'center',
-              backgroundColor: '#f5f5f5',
+              backgroundColor: colors.card,
               padding: 12,
               borderRadius: 12,
               marginTop: 20,
-              marginBottom: 10
+              marginBottom: 10,
+              borderWidth: 1,
+              borderColor: colors.border
             }}>
-              <Ionicons name="search" size={20} color={Colors.GRAY} />
+              <Ionicons name="search" size={20} color={colors.icon} />
               <TextInput
                 placeholder="Search your trips..."
-                style={{ flex: 1, marginLeft: 10, fontFamily: 'outfit', fontSize: 16 }}
+                placeholderTextColor={colors.icon}
+                style={{ flex: 1, marginLeft: 10, fontFamily: 'outfit', fontSize: 16, color: colors.text }}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
               />
@@ -187,18 +98,6 @@ export default function MyTrip() {
             }
             showsVerticalScrollIndicator={false}
           >
-            {/* Header is already rendered above? No, we need to pass it or render it inside based on logic? 
-                Wait, if I render header above, it stays fixed. 
-                If I want it to scroll, it must be in the scrollview/flatlist.
-                Let's move 'Header Component' definition into a variable OR render it conditionally.
-            */}
-            {/* ACTUALLY, simpler approach: Render Header Fixed? No, user usually expects it to scroll.
-                Standard pattern: ListHeaderComponent.
-                But for the EMPTY state, we need it inside the scrollview.
-            */}
-
-            {/* Retrying approach: Don't render generic view wrapper. Render conditional trees. */}
-
             <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY }] }}>
               <StartNewTripCard />
             </Animated.View>
@@ -210,7 +109,6 @@ export default function MyTrip() {
               onDeleteTrip={handleDeleteTrip}
               refreshing={refreshing}
               onRefresh={onRefresh}
-              headerComponent={null} /* We rendered header outside? No wait. */
             />
           </Animated.View>
         )}

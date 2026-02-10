@@ -8,11 +8,13 @@ import { useContext, useEffect } from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import Colors from '../../constants/Colors';
 import { CreateTripContext } from '../../context/CreateTripContext';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function ReviewTrip() {
   const { tripData /*, setTripData */ } = useContext(CreateTripContext);
   const navigation = useNavigation();
   const router = useRouter();
+  const { colors, theme } = useTheme();
 
   useEffect(() => {
     // best-effort header options; swallow if unsupported
@@ -84,7 +86,7 @@ export default function ReviewTrip() {
   return (
     <View style={{
       flex: 1,
-      backgroundColor: Colors.WHITE,
+      backgroundColor: colors.background,
     }}>
       <ScrollView
         contentContainerStyle={{
@@ -98,14 +100,14 @@ export default function ReviewTrip() {
           fontSize: 35,
           fontFamily: 'outfit-bold',
           marginTop: 25,
-          color: Colors.BLACK
+          color: colors.text
         }}>Review your Trip</Text>
 
         <View style={{ marginTop: 20 }}>
           <Text style={{
             fontFamily: 'outfit-medium',
             fontSize: 18,
-            color: Colors.GRAY
+            color: colors.icon
           }}>Before generating your trip, please review your selection</Text>
 
           {/* Destination */}
@@ -116,16 +118,16 @@ export default function ReviewTrip() {
             gap: 20
           }}>
             <Entypo name="location" size={40} color={Colors.PRIMARY} />
-            <View>
+            <View style={{ flex: 1 }}>
               <Text style={{
                 fontFamily: 'outfit',
                 fontSize: 16,
-                color: Colors.GRAY
+                color: colors.icon
               }}>Destination</Text>
               <Text style={{
                 fontFamily: 'outfit-medium',
                 fontSize: 20,
-                color: Colors.BLACK
+                color: colors.text
               }}>{destinationText}</Text>
             </View>
           </View>
@@ -138,16 +140,16 @@ export default function ReviewTrip() {
             gap: 20
           }}>
             <Ionicons name="calendar-number-outline" size={40} color={Colors.PRIMARY} />
-            <View>
+            <View style={{ flex: 1 }}>
               <Text style={{
                 fontFamily: 'outfit',
                 fontSize: 16,
-                color: Colors.GRAY
+                color: colors.icon
               }}>Travel Date</Text>
               <Text style={{
                 fontFamily: 'outfit-medium',
                 fontSize: 20,
-                color: Colors.BLACK
+                color: colors.text
               }}>{datesText}</Text>
 
               {totalDays != null && (
@@ -155,7 +157,7 @@ export default function ReviewTrip() {
                   fontFamily: 'outfit',
                   fontSize: 14,
                   marginTop: 4,
-                  color: Colors.GRAY
+                  color: colors.icon
                 }}>{`Total: ${totalDays} day${totalDays > 1 ? 's' : ''}`}</Text>
               )}
             </View>
@@ -170,9 +172,9 @@ export default function ReviewTrip() {
               gap: 20
             }}>
               <FontAwesome6 name="person-walking-luggage" size={35} color={Colors.PRIMARY} />
-              <View>
-                <Text style={{ fontFamily: 'outfit', fontSize: 16, color: Colors.GRAY }}>Travelers</Text>
-                <Text style={{ fontFamily: 'outfit-medium', fontSize: 20, color: Colors.BLACK }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontFamily: 'outfit', fontSize: 16, color: colors.icon }}>Travelers</Text>
+                <Text style={{ fontFamily: 'outfit-medium', fontSize: 20, color: colors.text }}>
                   {typeof tripData.traveler === 'string' ? tripData.traveler : (tripData.traveler.title || JSON.stringify(tripData.traveler))}
                 </Text>
               </View>
@@ -188,9 +190,9 @@ export default function ReviewTrip() {
               gap: 20
             }}>
               <Ionicons name="wallet-outline" size={40} color={Colors.PRIMARY} />
-              <View>
-                <Text style={{ fontFamily: 'outfit', fontSize: 16, color: Colors.GRAY }}>Budget</Text>
-                <Text style={{ fontFamily: 'outfit-medium', fontSize: 20, color: Colors.BLACK }}>{tripData.budget?.title || 'Not selected'}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontFamily: 'outfit', fontSize: 16, color: colors.icon }}>Budget</Text>
+                <Text style={{ fontFamily: 'outfit-medium', fontSize: 20, color: colors.text }}>{tripData.budget?.title || 'Not selected'}</Text>
               </View>
             </View>
           )}
@@ -204,8 +206,8 @@ export default function ReviewTrip() {
           }}>
             <MaterialIcons name="attractions" size={40} color={Colors.PRIMARY} />
             <View style={{ flex: 1 }}>
-              <Text style={{ fontFamily: 'outfit', fontSize: 16, color: Colors.GRAY }}>Attractions</Text>
-              <Text style={{ fontFamily: 'outfit-medium', fontSize: 20, color: Colors.BLACK }}>
+              <Text style={{ fontFamily: 'outfit', fontSize: 16, color: colors.icon }}>Attractions</Text>
+              <Text style={{ fontFamily: 'outfit-medium', fontSize: 20, color: colors.text }}>
                 {attractionsText}
               </Text>
             </View>
@@ -217,12 +219,12 @@ export default function ReviewTrip() {
           onPress={onContinue}
           style={{
             padding: 18,
-            backgroundColor: Colors.BLACK,
+            backgroundColor: Colors.PRIMARY,
             borderRadius: 50,
             alignItems: 'center',
             marginTop: 50,
             marginBottom: 20,
-            shadowColor: Colors.BLACK,
+            shadowColor: Colors.PRIMARY,
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.3,
             shadowRadius: 8,

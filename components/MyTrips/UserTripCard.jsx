@@ -4,11 +4,13 @@ import { Text, TouchableOpacity, View } from 'react-native';
 import { Image } from 'expo-image';
 import { useState } from 'react';
 import Colors from '../../constants/Colors';
+import { useTheme } from '../../context/ThemeContext';
 
 const API_KEY = 'AIzaSyBNiTVqT-LJpDzl5i2WlVuYtUsK8yMF7Oc';
 
 export default function UserTripCard({ trip, onDelete, index = 0, onPress }) {
   const [imageError, setImageError] = useState(false);
+  const { colors } = useTheme();
 
   if (!trip || !trip.tripData) return null;
 
@@ -32,14 +34,16 @@ export default function UserTripCard({ trip, onDelete, index = 0, onPress }) {
         marginTop: 15,
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#fff',
+        backgroundColor: colors.card,
         padding: 12,
         borderRadius: 15,
-        shadowColor: '#000',
+        shadowColor: colors.shadow,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.05,
         shadowRadius: 5,
-        elevation: 2
+        elevation: 2,
+        borderWidth: 1,
+        borderColor: colors.border
       }}
     >
       <View style={{
@@ -47,7 +51,7 @@ export default function UserTripCard({ trip, onDelete, index = 0, onPress }) {
         height: 75,
         borderRadius: 12,
         overflow: 'hidden',
-        backgroundColor: '#e8e8e8'
+        backgroundColor: colors.border
       }}>
         {imageUrl ? (
           <Image
@@ -70,14 +74,14 @@ export default function UserTripCard({ trip, onDelete, index = 0, onPress }) {
         <Text style={{
           fontFamily: 'outfit-bold',
           fontSize: 16,
-          color: Colors.BLACK
+          color: colors.text
         }} numberOfLines={1}>
           {locationName}
         </Text>
         <Text style={{
           fontFamily: 'outfit',
           fontSize: 13,
-          color: Colors.GRAY,
+          color: colors.icon,
           marginTop: 4
         }}>
           {startDate ? moment(startDate).format('DD MMM YYYY') : 'Date TBD'}
@@ -85,7 +89,7 @@ export default function UserTripCard({ trip, onDelete, index = 0, onPress }) {
         <Text style={{
           fontFamily: 'outfit',
           fontSize: 12,
-          color: Colors.GRAY,
+          color: colors.icon,
           marginTop: 2
         }}>
           {typeof traveler === 'object' ? traveler?.title : traveler}

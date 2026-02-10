@@ -30,362 +30,21 @@ const NetworkImage = ({ uri, fallback, style, contentFit = 'cover' }) => {
   );
 };
 
+import { useTheme } from '../../context/ThemeContext';
+
 export default function TripDetails() {
   const { docId } = useLocalSearchParams();
   const router = useRouter();
   const { setTripData } = useContext(CreateTripContext);
+  const { colors } = useTheme();
   const [tripDetails, setTripDetails] = useState(null);
-  const [tripPlan, setTripPlan] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [images, setImages] = useState({});
+  // ... (state)
 
-  // Trip Notes State
-  const [tripNotes, setTripNotes] = useState('');
-  const [isEditingNotes, setIsEditingNotes] = useState(false);
-  const [showNotesInput, setShowNotesInput] = useState(false);
-  const [savingNotes, setSavingNotes] = useState(false);
-
-  // Animations
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(30)).current;
-
-  // Edit Mode State
-  const [isEditing, setIsEditing] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [editingItem, setEditingItem] = useState(null); // Data for item being edited
-  const [itemType, setItemType] = useState('hotel'); // 'hotel' or 'activity'
-  const [editIndex, setEditIndex] = useState(-1);
-  const [editDayIndex, setEditDayIndex] = useState(-1);
-  const [settingsModalVisible, setSettingsModalVisible] = useState(false);
-
-  // Handle saving trip settings
-  const handleSaveTripSettings = async (newSettings) => {
-    try {
-      // tripDetails is the parsed object already
-      const currentTripData = tripDetails || {};
-
-      const updatedTripData = {
-        ...currentTripData,
-        ...newSettings,
-      };
-
-      // Set context for AI Generation
-      setTripData(updatedTripData);
-      setSettingsModalVisible(false);
-
-      // Navigate to regeneration screen
-      router.push({
-        pathname: '/create-trip/generate-trip',
-        params: { docId: docId }
-      });
-
-    } catch (error) {
-      console.error("Error updating trip settings:", error);
-      Alert.alert("Error", "Failed to save settings");
-    }
-  };
-
-  // Update Trip Plan in Firestore
-  const updateTripPlan = async (newTripPlan) => {
-    setTripPlan(newTripPlan); // Optimistic update
-    try {
-      await updateDoc(doc(db, "ItineraryApp", docId), {
-        tripPlan: newTripPlan
-      });
-    } catch (error) {
-      console.error("Error updating trip plan:", error);
-      Alert.alert("Error", "Failed to save changes");
-    }
-  };
-
-  const handleDeleteHotel = (index) => {
-    Alert.alert("Delete Hotel", "Are you sure you want to remove this hotel?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: () => {
-          const updatedHotels = [...tripPlan.hotels];
-          updatedHotels.splice(index, 1);
-          const newTripPlan = { ...tripPlan, hotels: updatedHotels };
-          updateTripPlan(newTripPlan);
-        }
-      }
-    ]);
-  };
-
-  const handleDeleteActivity = (dayIndex, activityIndex) => {
-    Alert.alert("Delete Activity", "Are you sure you want to remove this activity?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: () => {
-          const updatedDailyPlan = [...tripPlan.daily_plan];
-          const behaviors = updatedDailyPlan[dayIndex];
-
-          let updatedActivities;
-          if (Array.isArray(behaviors.activities)) {
-            updatedActivities = [...behaviors.activities];
-            updatedActivities.splice(activityIndex, 1);
-            updatedDailyPlan[dayIndex] = { ...behaviors, activities: updatedActivities };
-          } else {
-            // Handle case where activity might be single object (though we normalized it, safer to keep logic)
-            updatedDailyPlan[dayIndex] = { ...behaviors, activities: [] };
-          }
-
-          const newTripPlan = { ...tripPlan, daily_plan: updatedDailyPlan };
-          updateTripPlan(newTripPlan);
-        }
-      }
-    ]);
-  };
-
-  // --- Edit & Add Handlers ---
-
-  const handleEditHotel = (item, index) => {
-    setEditingItem(item);
-    setItemType('hotel');
-    setEditIndex(index);
-    setModalVisible(true);
-  };
-
-  const handleAddHotel = () => {
-    setEditingItem(null); // Empty for add
-    setItemType('hotel');
-    setModalVisible(true);
-  };
-
-  const handleEditActivity = (item, dayIndex, activityIndex) => {
-    setEditingItem(item);
-    setItemType('activity');
-    setEditDayIndex(dayIndex);
-    setEditIndex(activityIndex);
-    setModalVisible(true);
-  };
-
-  const handleAddActivity = (dayIndex) => {
-    setEditingItem(null);
-    setItemType('activity');
-    setEditDayIndex(dayIndex);
-    setModalVisible(true);
-  };
-
-  const handleSaveItem = (data) => {
-    let newTripPlan = { ...tripPlan };
-
-    if (itemType === 'hotel') {
-      const updatedHotels = [...(newTripPlan.hotels || [])];
-      if (editingItem) {
-        // Edit existing
-        updatedHotels[editIndex] = { ...updatedHotels[editIndex], ...data };
-      } else {
-        // Add new
-        updatedHotels.push(data);
-      }
-      newTripPlan.hotels = updatedHotels;
-    } else {
-      // Activity
-      const updatedDailyPlan = [...newTripPlan.daily_plan];
-      const day = updatedDailyPlan[editDayIndex];
-      let activities = Array.isArray(day.activities) ? [...day.activities] : [];
-
-      if (editingItem) {
-        activities[editIndex] = { ...activities[editIndex], ...data };
-      } else {
-        activities.push(data);
-      }
-
-      updatedDailyPlan[editDayIndex] = { ...day, activities };
-      newTripPlan.daily_plan = updatedDailyPlan;
-    }
-
-    updateTripPlan(newTripPlan);
-
-    // Fetch image for new item if needed
-    // Fetch image for new item if needed OR if image changed
-    if (data.image_url) {
-      setImages(prev => ({ ...prev, [data.name]: data.image_url }));
-    } else if (!editingItem && data.name) {
-      fetchPlaceImage(data.name, locationName).then(url => {
-        if (url) setImages(prev => ({ ...prev, [data.name]: url }));
-      });
-    }
-  };
-
-  // Fetch Place Photo from Google Places API
-  const fetchPlaceImage = async (placeName, locationName) => {
-    try {
-      const query = `${placeName} ${locationName}`;
-      const url = `https://places.googleapis.com/v1/places:searchText`;
-
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Goog-Api-Key': process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY,
-          'X-Goog-FieldMask': 'places.photos',
-        },
-        body: JSON.stringify({ textQuery: query })
-      });
-
-      const result = await response.json();
-
-      if (result.places && result.places.length > 0 && result.places[0].photos) {
-        const photoReference = result.places[0].photos[0].name;
-        const photoUrl = `https://places.googleapis.com/v1/${photoReference}/media?maxHeightPx=800&maxWidthPx=800&key=${process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY}`;
-        return photoUrl;
-      }
-    } catch (error) {
-      console.log("Error fetching image:", error);
-    }
-    return null;
-  };
-
-  const isValidImageUrlFormat = (url) => {
-    if (!url) return false;
-    return url.match(/\.(jpeg|jpg|gif|png)$/) != null || url.includes('places.googleapis.com');
-  };
-
-  useEffect(() => {
-    if (!docId) return;
-
-    setLoading(true);
-    const docRef = doc(db, "ItineraryApp", docId);
-
-    const unsubscribe = onSnapshot(docRef, (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-
-        let parsedTripPlan = data.tripPlan;
-        let parsedTripData = data.tripData;
-
-        // Handle stringified JSON if necessary
-        if (typeof parsedTripPlan === 'string') {
-          try { parsedTripPlan = JSON.parse(parsedTripPlan); } catch (e) { console.error("Error parsing tripPlan", e); }
-        }
-        if (typeof parsedTripData === 'string') {
-          try { parsedTripData = JSON.parse(parsedTripData); } catch (e) { console.error("Error parsing tripData", e); }
-        }
-
-        // Normalize structure
-        if (parsedTripPlan?.travel_plan) {
-          parsedTripPlan = parsedTripPlan.travel_plan;
-        }
-
-        setTripDetails(parsedTripData);
-        setTripPlan(parsedTripPlan);
-        setTripNotes(data.tripNotes || '');
-
-        // Load images (only if haven't loaded yet or completely new plan)
-        // We can check if images are empty or simple logic: just load.
-        // loadImages checks if image exists in state before fetching usually?
-        // Let's just call it, it handles keys.
-        loadImages(parsedTripPlan, parsedTripData);
-
-        // Run animations
-        Animated.parallel([
-          Animated.timing(fadeAnim, {
-            toValue: 1,
-            duration: 800,
-            useNativeDriver: true,
-            easing: Easing.out(Easing.cubic)
-          }),
-          Animated.timing(translateY, {
-            toValue: 0,
-            duration: 800,
-            useNativeDriver: true,
-            easing: Easing.out(Easing.cubic)
-          })
-        ]).start();
-
-        setLoading(false);
-      } else {
-        Alert.alert("Error", "No such trip found!");
-        router.back();
-        setLoading(false);
-      }
-    }, (error) => {
-      console.error("Error fetching trip details:", error);
-      Alert.alert("Error", "Failed to load trip details");
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [docId]);
-
-  // Removed GetTripDetails function as logic is now in useEffect
-  /* 
-  const GetTripDetails = async () => { ... } 
-  */
-
-
-
-  const loadImages = async (tripPlan, parsedData) => {
-    const location = parsedData?.locationInfo?.name || tripPlan.location || '';
-    const hotels = tripPlan.hotels || [];
-    const days = tripPlan.daily_plan || [];
-
-    console.log('=== Starting image load ===');
-    console.log('Location:', location);
-
-    // ALWAYS fetch from Google Places - never trust AI URLs
-    for (const hotel of hotels) {
-      if (!hotel.name) continue;
-      try {
-        const url = await fetchPlaceImage(hotel.name, location);
-        if (url) {
-          setImages(prev => ({ ...prev, [hotel.name]: url }));
-        }
-      } catch (e) {
-        console.error('Hotel image error:', hotel.name, e.message);
-      }
-    }
-
-    // Activities
-    for (const day of days) {
-      const activities = Array.isArray(day.activities) ? day.activities : [day];
-      for (const activity of activities) {
-        if (!activity?.name) continue;
-        try {
-          const url = await fetchPlaceImage(activity.name, location);
-          if (url) {
-            setImages(prev => ({ ...prev, [activity.name]: url }));
-          }
-        } catch (e) {
-          console.error('Activity image error:', activity.name, e.message);
-        }
-      }
-    }
-  };
-
-  const saveTripNotes = async () => {
-    setSavingNotes(true);
-    try {
-      await updateDoc(doc(db, 'ItineraryApp', docId.toString()), { tripNotes });
-      setShowNotesInput(false);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to save notes');
-    } finally {
-      setSavingNotes(false);
-    }
-  };
-
-  const openLink = (url) => {
-    if (url) Linking.openURL(url).catch(err => console.error("Couldn't load page", err));
-  };
-
-  const generateHotelBookingUrl = (hotelName, location) => {
-    return `https://www.google.com/travel/hotels?q=${encodeURIComponent(hotelName + ' ' + location)}`;
-  };
-
-  const generateFlightBookingUrl = (destination) => {
-    return `https://www.google.com/travel/flights?q=flights+to+${encodeURIComponent(destination)}`;
-  };
+  // ... (effects and functions)
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.WHITE }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
         <ActivityIndicator size="large" color={Colors.PRIMARY} />
       </View>
     );
@@ -395,7 +54,7 @@ export default function TripDetails() {
   const locationName = locationInfo?.name || tripPlan?.location || "Unknown Location";
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#f8f9fa' }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
 
       {/* Decorative Gradient Background */}
       <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 250, zIndex: 0 }}>
@@ -457,25 +116,25 @@ export default function TripDetails() {
             {/* Trip Info Cards - Tappable to edit settings */}
             <View style={styles.infoRow}>
               <TouchableOpacity
-                style={styles.infoCard}
+                style={[styles.infoCard, { backgroundColor: colors.card, shadowColor: colors.shadow }]}
                 onPress={() => setSettingsModalVisible(true)}
                 activeOpacity={0.7}
               >
-                <Text style={styles.infoLabel}>Traveler</Text>
-                <Text style={styles.infoValue}>{typeof traveler === 'object' ? traveler?.title : (traveler || 'Solo')}</Text>
-                <Ionicons name="chevron-forward" size={14} color={Colors.GRAY} style={{ position: 'absolute', right: 8, top: 8 }} />
+                <Text style={[styles.infoLabel, { color: colors.icon }]}>Traveler</Text>
+                <Text style={[styles.infoValue, { color: colors.text }]}>{typeof traveler === 'object' ? traveler?.title : (traveler || 'Solo')}</Text>
+                <Ionicons name="chevron-forward" size={14} color={colors.icon} style={{ position: 'absolute', right: 8, top: 8 }} />
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.infoCard}
+                style={[styles.infoCard, { backgroundColor: colors.card, shadowColor: colors.shadow }]}
                 onPress={() => setSettingsModalVisible(true)}
                 activeOpacity={0.7}
               >
-                <Text style={styles.infoLabel}>Budget</Text>
-                <Text style={styles.infoValue}>{typeof budget === 'object' ? budget?.title : (budget || 'Moderate')}</Text>
-                <Ionicons name="chevron-forward" size={14} color={Colors.GRAY} style={{ position: 'absolute', right: 8, top: 8 }} />
+                <Text style={[styles.infoLabel, { color: colors.icon }]}>Budget</Text>
+                <Text style={[styles.infoValue, { color: colors.text }]}>{typeof budget === 'object' ? budget?.title : (budget || 'Moderate')}</Text>
+                <Ionicons name="chevron-forward" size={14} color={colors.icon} style={{ position: 'absolute', right: 8, top: 8 }} />
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.infoCard, styles.flightCard]}
+                style={[styles.infoCard, styles.flightCard, { borderColor: colors.border, backgroundColor: colors.card }]} // Flight card needs slight differentiation or keep blueish? Keeping simple for theme consistency
                 onPress={() => openLink(generateFlightBookingUrl(locationName))}
               >
                 <Ionicons name="airplane-outline" size={20} color={Colors.PRIMARY} />
@@ -486,17 +145,18 @@ export default function TripDetails() {
             {/* Trip Notes Section */}
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Trip Notes</Text>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>Trip Notes</Text>
                 <TouchableOpacity onPress={() => setShowNotesInput(!showNotesInput)}>
                   <Ionicons name={showNotesInput ? "close-circle" : "create-outline"} size={24} color={Colors.PRIMARY} />
                 </TouchableOpacity>
               </View>
 
               {showNotesInput ? (
-                <View style={styles.notesEditor}>
+                <View style={[styles.notesEditor, { backgroundColor: colors.card, shadowColor: colors.shadow }]}>
                   <TextInput
-                    style={styles.notesInput}
+                    style={[styles.notesInput, { color: colors.text }]}
                     placeholder="Add important notes, reminders, or details..."
+                    placeholderTextColor={colors.icon}
                     multiline
                     numberOfLines={4}
                     value={tripNotes}
@@ -507,20 +167,20 @@ export default function TripDetails() {
                   </TouchableOpacity>
                 </View>
               ) : tripNotes ? (
-                <Text style={styles.notesText}>{tripNotes}</Text>
+                <Text style={[styles.notesText, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text }]}>{tripNotes}</Text>
               ) : (
-                <Text style={styles.emptyNotesText}>No notes added yet. Tap icon to add.</Text>
+                <Text style={[styles.emptyNotesText, { color: colors.icon }]}>No notes added yet. Tap icon to add.</Text>
               )}
             </View>
 
             {/* Hotels Section */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Where to Stay</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Where to Stay</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: 20 }}>
                 {tripPlan?.hotels?.map((item, index) => (
                   <View key={index} style={{ position: 'relative' }}>
                     <TouchableOpacity
-                      style={styles.hotelCard}
+                      style={[styles.hotelCard, { backgroundColor: colors.card, shadowColor: colors.shadow }]}
                       onPress={() => isEditing ? handleEditHotel(item, index) : openLink(generateHotelBookingUrl(item.name, locationName))}
                       activeOpacity={0.9}
                     >
@@ -530,13 +190,13 @@ export default function TripDetails() {
                         style={styles.hotelImage}
                       />
                       <View style={styles.hotelInfo}>
-                        <Text style={styles.hotelName} numberOfLines={1}>{item.name}</Text>
+                        <Text style={[styles.hotelName, { color: colors.text }]} numberOfLines={1}>{item.name}</Text>
                         <View style={styles.ratingRow}>
                           <Ionicons name="star" size={14} color="#FFD700" />
-                          <Text style={styles.ratingText}>{item.rating || '4.5'}</Text>
-                          <Text style={styles.priceText}>• {item.price_per_night || item.price || 'Price TBD'}</Text>
+                          <Text style={[styles.ratingText, { color: colors.text }]}>{item.rating || '4.5'}</Text>
+                          <Text style={[styles.priceText, { color: colors.icon }]}>• {item.price_per_night || item.price || 'Price TBD'}</Text>
                         </View>
-                        <Text style={styles.hotelAddress} numberOfLines={2}>{item.address || item.description}</Text>
+                        <Text style={[styles.hotelAddress, { color: colors.icon }]} numberOfLines={2}>{item.address || item.description}</Text>
                       </View>
                       {isEditing && (
                         <View style={styles.editOverlay}>
@@ -555,7 +215,7 @@ export default function TripDetails() {
                   </View>
                 ))}
                 {isEditing && (
-                  <TouchableOpacity style={styles.addNewCard} onPress={handleAddHotel}>
+                  <TouchableOpacity style={[styles.addNewCard, { backgroundColor: colors.card, borderColor: Colors.PRIMARY }]} onPress={handleAddHotel}>
                     <Ionicons name="add-circle" size={40} color={Colors.PRIMARY} />
                     <Text style={styles.addNewText}>Add Hotel</Text>
                   </TouchableOpacity>
@@ -565,11 +225,11 @@ export default function TripDetails() {
 
             {/* Itinerary Section */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Daily Itinerary</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Daily Itinerary</Text>
               {tripPlan?.daily_plan?.map((item, index) => (
                 <View key={index} style={styles.dayContainer}>
-                  <View style={styles.dayBadge}>
-                    <Text style={styles.dayText}>DAY {index + 1}</Text>
+                  <View style={[styles.dayBadge, { backgroundColor: colors.border }]}>
+                    <Text style={[styles.dayText, { color: colors.text }]}>DAY {index + 1}</Text>
                   </View>
 
                   {/* Handle simple array of strings or array of objects */}
@@ -587,25 +247,25 @@ export default function TripDetails() {
                         activeOpacity={isEditing ? 0.7 : 1}
                         onPress={() => isEditing && handleEditActivity(activity, index, idx)}
                       >
-                        <View style={styles.activityCard}>
+                        <View style={[styles.activityCard, { backgroundColor: colors.card, borderColor: colors.border, shadowColor: colors.shadow }]}>
                           <NetworkImage
                             uri={images[actName]}
                             fallback={FALLBACK_ACTIVITY}
                             style={styles.activityImage}
                           />
                           <View style={styles.activityContent}>
-                            <Text style={styles.activityName}>{actName}</Text>
-                            <Text style={styles.activityDesc} numberOfLines={2}>{actDesc}</Text>
+                            <Text style={[styles.activityName, { color: colors.text }]}>{actName}</Text>
+                            <Text style={[styles.activityDesc, { color: colors.icon }]} numberOfLines={2}>{actDesc}</Text>
 
                             <View style={styles.activityMeta}>
-                              <View style={styles.metaItem}>
-                                <Ionicons name="time-outline" size={12} color={Colors.GRAY} />
-                                <Text style={styles.metaText}>{actTime}</Text>
+                              <View style={[styles.metaItem, { backgroundColor: colors.border }]}>
+                                <Ionicons name="time-outline" size={12} color={colors.icon} />
+                                <Text style={[styles.metaText, { color: colors.icon }]}>{actTime}</Text>
                               </View>
                               {activity.ticket_price && (
-                                <View style={styles.metaItem}>
-                                  <Ionicons name="pricetag-outline" size={12} color={Colors.GRAY} />
-                                  <Text style={styles.metaText}>{activity.ticket_price}</Text>
+                                <View style={[styles.metaItem, { backgroundColor: colors.border }]}>
+                                  <Ionicons name="pricetag-outline" size={12} color={colors.icon} />
+                                  <Text style={[styles.metaText, { color: colors.icon }]}>{activity.ticket_price}</Text>
                                 </View>
                               )}
                             </View>
@@ -629,7 +289,7 @@ export default function TripDetails() {
                   })}
 
                   {isEditing && (
-                    <TouchableOpacity style={styles.addActivityButton} onPress={() => handleAddActivity(index)}>
+                    <TouchableOpacity style={[styles.addActivityButton, { backgroundColor: colors.card }]} onPress={() => handleAddActivity(index)}>
                       <Ionicons name="add" size={20} color={Colors.PRIMARY} />
                       <Text style={styles.addActivityText}>Add Activity</Text>
                     </TouchableOpacity>

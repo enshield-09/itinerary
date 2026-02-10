@@ -8,6 +8,7 @@ import Colors from '../../constants/Colors'
 import { buildFinalPrompt } from '../../constants/Options'
 import { CreateTripContext } from '../../context/CreateTripContext'
 import { auth, db } from './../../configs/FirebaseConfig'
+import { useTheme } from '../../context/ThemeContext'
 
 export default function GenerateTrip() {
   const { tripData, setTripData } = useContext(CreateTripContext);
@@ -15,6 +16,8 @@ export default function GenerateTrip() {
   const router = useRouter();
   const { docId: existingDocId } = useLocalSearchParams();
   const user = auth.currentUser;
+  const { colors } = useTheme();
+
   useEffect(() => {
     if (tripData?.locationInfo && tripData?.budget && tripData?.selectedAttractions?.length > 0) {
       GenerateAiTrip();
@@ -186,7 +189,7 @@ export default function GenerateTrip() {
     <View style={{
       padding: 25,
       paddingTop: 75,
-      backgroundColor: Colors.WHITE,
+      backgroundColor: colors.background,
       height: '100%'
     }}>
       <Text style={{
@@ -194,7 +197,7 @@ export default function GenerateTrip() {
         fontFamily: 'outfit-bold',
         marginTop: 25,
         textAlign: 'center',
-        color: Colors.BLACK
+        color: colors.text
       }}>Please Wait...</Text>
 
       <Text style={{
@@ -202,7 +205,7 @@ export default function GenerateTrip() {
         fontSize: 20,
         marginTop: 40,
         textAlign: 'center',
-        color: Colors.GRAY
+        color: colors.icon
       }}>We are working to generate your dream trip</Text>
       <Image source={require('./../../assets/images/loading.gif')}
         style={{
@@ -216,7 +219,7 @@ export default function GenerateTrip() {
         fontFamily: 'outfit',
         fontSize: 18,
         textAlign: 'center',
-        color: Colors.GRAY
+        color: colors.icon
       }}>Do not Go Back</Text>
     </View>
   )

@@ -3,6 +3,8 @@ import { useIsFocused } from '@react-navigation/native';
 import { useContext, useEffect, useState } from 'react';
 import { Animated, Easing, ImageBackground, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { CreateTripContext } from './../../context/CreateTripContext';
+import { useTheme } from '../../context/ThemeContext';
+import Colors from '../../constants/Colors';
 
 // Conditionally import GooglePlacesAutocomplete only on native platforms
 let GooglePlacesAutocomplete = null;
@@ -19,6 +21,7 @@ export default function SelectOrigin() {
   const navigation = useNavigation();
   const router = useRouter();
   const { tripData, setTripData } = useContext(CreateTripContext);
+  const { colors, theme } = useTheme();
 
   const bgImages = [
     require('./../../assets/images/tajmahal.jpg'),
@@ -102,9 +105,12 @@ export default function SelectOrigin() {
         {Platform.OS === 'web' ? (
           <View>
             <TextInput
-              style={styles.webInput}
+              style={[styles.webInput, {
+                backgroundColor: theme === 'dark' ? 'rgba(30,30,30,0.95)' : 'rgba(255,255,255,0.95)',
+                color: colors.text
+              }]}
               placeholder="Enter your current location (e.g., New York, USA)"
-              placeholderTextColor="#888"
+              placeholderTextColor={colors.icon}
               onChangeText={(text) => {
                 if (text.length > 2) {
                   setTripData(prev => ({
@@ -131,7 +137,7 @@ export default function SelectOrigin() {
               }}
             />
             <TouchableOpacity
-              style={styles.webButton}
+              style={[styles.webButton, { backgroundColor: Colors.PRIMARY }]}
               onPress={() => {
                 const locationName = 'New York, USA'; // Default for demo
                 handleOriginSelect({
@@ -155,7 +161,7 @@ export default function SelectOrigin() {
             timeout={20000}
             keyboardShouldPersistTaps="handled"
             query={{
-              key: 'AIzaSyBNiTVqT-LJpDzl5i2WlVuYtUsK8yMF7Oc',
+              key: process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY,
               language: 'en'
             }}
             onPress={(data, details = null) => {
@@ -170,11 +176,12 @@ export default function SelectOrigin() {
             onFail={(error) => console.warn('Autocomplete error:', error)}
             onNotFound={() => console.log('No results found')}
             textInputProps={{
-              onFocus: () => console.log('Input focused')
+              onFocus: () => console.log('Input focused'),
+              placeholderTextColor: colors.icon
             }}
             styles={{
               textInputContainer: {
-                backgroundColor: 'rgba(255,255,255,0.9)',
+                backgroundColor: theme === 'dark' ? 'rgba(30,30,30,0.95)' : 'rgba(255,255,255,0.9)',
                 borderRadius: 12,
                 paddingHorizontal: 12,
                 borderWidth: 0,
@@ -186,20 +193,20 @@ export default function SelectOrigin() {
               },
               textInput: {
                 height: 52,
-                color: '#111',
+                color: colors.text,
                 fontSize: 18,
                 fontWeight: '500',
                 letterSpacing: 0.5
               },
               listView: {
-                backgroundColor: 'rgba(255,255,255,0.95)',
+                backgroundColor: colors.card,
                 marginTop: 15,
                 borderRadius: 12,
                 borderWidth: 1,
-                borderColor: '#eee'
+                borderColor: colors.border
               },
               description: {
-                color: '#000',
+                color: colors.text,
                 fontWeight: '500'
               },
               poweredContainer: {
@@ -208,7 +215,7 @@ export default function SelectOrigin() {
             }}
           />
         ) : (
-          <Text style={styles.errorText}>Google Places Autocomplete not available</Text>
+          <Text style={styles.errorText}>GooglePlacesAutocomplete not available</Text>
         )}
       </View>
     </View>

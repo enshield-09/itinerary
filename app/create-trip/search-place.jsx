@@ -5,6 +5,7 @@ import { useContext, useEffect, useState } from 'react';
 import { Animated, Easing, ImageBackground, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { CreateTripContext } from './../../context/CreateTripContext';
 import Colors from './../../constants/Colors';
+import { useTheme } from '../../context/ThemeContext';
 
 // Conditionally import GooglePlacesAutocomplete only on native platforms
 let GooglePlacesAutocomplete = null;
@@ -23,6 +24,7 @@ export default function SearchPlace() {
   const navigation = useNavigation();
   const router = useRouter();
   const { tripData, setTripData } = useContext(CreateTripContext);
+  const { colors, theme } = useTheme();
   const [recentSearches, setRecentSearches] = useState([]);
 
   // Recommendations State
@@ -207,9 +209,12 @@ export default function SearchPlace() {
         {Platform.OS === 'web' ? (
           <View>
             <TextInput
-              style={styles.webInput}
+              style={[styles.webInput, {
+                backgroundColor: theme === 'dark' ? 'rgba(30,30,30,0.9)' : 'rgba(255,255,255,0.9)',
+                color: colors.text
+              }]}
               placeholder="Search for a place (e.g., Paris, France)"
-              placeholderTextColor="#888"
+              placeholderTextColor={colors.icon}
               onChangeText={(text) => {
                 // Store the text as user types
                 if (text.length > 2) {
@@ -237,7 +242,7 @@ export default function SearchPlace() {
               }}
             />
             <TouchableOpacity
-              style={styles.webButton}
+              style={[styles.webButton, { backgroundColor: Colors.PRIMARY }]}
               onPress={() => {
                 const locationName = 'Paris, France'; // Default for demo
                 handleLocationSelect(locationName, {
@@ -284,7 +289,7 @@ export default function SearchPlace() {
             timeout={20000}
             keyboardShouldPersistTaps="handled"
             query={{
-              key: 'AIzaSyBNiTVqT-LJpDzl5i2WlVuYtUsK8yMF7Oc',
+              key: process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY,
               language: 'en'
             }}
             onPress={(data, details = null) => {
@@ -300,11 +305,11 @@ export default function SearchPlace() {
             onNotFound={() => console.log('No results found')}
             textInputProps={{
               onFocus: () => console.log('Input focused'),
-              placeholderTextColor: '#666'
+              placeholderTextColor: colors.icon
             }}
             styles={{
               textInputContainer: {
-                backgroundColor: 'rgba(255,255,255,0.95)',
+                backgroundColor: theme === 'dark' ? 'rgba(30,30,30,0.95)' : 'rgba(255,255,255,0.95)',
                 borderRadius: 15,
                 paddingHorizontal: 10,
                 borderWidth: 0,
@@ -318,13 +323,13 @@ export default function SearchPlace() {
               },
               textInput: {
                 height: 50,
-                color: '#111',
+                color: colors.text,
                 fontSize: 18,
                 fontFamily: 'outfit-medium',
                 backgroundColor: 'transparent'
               },
               listView: {
-                backgroundColor: '#fff',
+                backgroundColor: colors.card,
                 marginTop: 15,
                 borderRadius: 15,
                 overflow: 'hidden',
@@ -333,10 +338,10 @@ export default function SearchPlace() {
               row: {
                 padding: 13,
                 borderBottomWidth: 1,
-                borderBottomColor: '#eee'
+                borderBottomColor: colors.border
               },
               description: {
-                color: '#000',
+                color: colors.text,
                 fontFamily: 'outfit',
                 fontSize: 15
               },
@@ -353,9 +358,9 @@ export default function SearchPlace() {
       {/* Recommendations Modal */}
       {showRecModal && (
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>✨ Suggested Add-ons</Text>
-            <Text style={styles.modalSubtitle}>Popular places in {pendingLocation?.name || 'this location'}</Text>
+          <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>✨ Suggested Add-ons</Text>
+            <Text style={[styles.modalSubtitle, { color: colors.icon }]}>Popular places in {pendingLocation?.name || 'this location'}</Text>
 
             <ScrollView style={{ maxHeight: 300, marginVertical: 15 }}>
               {recommendations.map((place, idx) => (
@@ -363,13 +368,15 @@ export default function SearchPlace() {
                   key={idx}
                   style={[
                     styles.recItem,
-                    selectedRecs.includes(place.displayName.text) && styles.recItemSelected
+                    { backgroundColor: theme === 'dark' ? colors.background : '#f5f5f5', borderColor: 'transparent' },
+                    selectedRecs.includes(place.displayName.text) && { backgroundColor: theme === 'dark' ? 'rgba(11, 102, 255, 0.2)' : '#e6f2ff', borderColor: Colors.PRIMARY }
                   ]}
                   onPress={() => toggleRecSelection(place.displayName.text)}
                 >
                   <Text style={[
                     styles.recText,
-                    selectedRecs.includes(place.displayName.text) && styles.recTextSelected
+                    { color: colors.text },
+                    selectedRecs.includes(place.displayName.text) && { color: Colors.PRIMARY }
                   ]}>
                     {place.displayName.text}
                   </Text>
@@ -381,7 +388,7 @@ export default function SearchPlace() {
             </ScrollView>
 
             <TouchableOpacity
-              style={styles.modalButton}
+              style={[styles.modalButton, { backgroundColor: Colors.PRIMARY }]}
               onPress={() => proceedToNextStep(selectedRecs)}
             >
               <Text style={styles.modalButtonText}>Add Selection & Continue</Text>
@@ -545,3 +552,5 @@ const styles = StyleSheet.create({
     color: Colors.GRAY
   }
 });
+
+

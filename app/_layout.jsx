@@ -3,6 +3,7 @@ import { useState } from "react";
 import { CreateTripContext } from '../context/CreateTripContext';
 import { useFonts } from 'expo-font';
 import { Outfit_400Regular, Outfit_500Medium, Outfit_700Bold } from '@expo-google-fonts/outfit';
+import { ThemeProvider } from '../context/ThemeContext';
 
 export default function RootLayout() {
 
@@ -19,14 +20,16 @@ export default function RootLayout() {
   }
 
   return (
-    <CreateTripContext.Provider value={{ tripData, setTripData }}>
-      <Stack screenOptions={{
-        headerShown: false
-      }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="(tabs)" />
-      </Stack>
-    </CreateTripContext.Provider>
+    <ThemeProvider>
+      <CreateTripContext.Provider value={{ tripData, setTripData }}>
+        <Stack screenOptions={{
+          headerShown: false
+        }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="(tabs)" />
+        </Stack>
+      </CreateTripContext.Provider>
+    </ThemeProvider>
   );
 
 }

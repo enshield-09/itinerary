@@ -1,8 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Text, View } from 'react-native';
 import Colors from '../../constants/Colors';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function OptionCard({ option, selectedOption }) {
+    const { colors, theme } = useTheme();
     // Handle both single selection (object) and multi-selection (array)
     const isSelected = Array.isArray(selectedOption)
         ? selectedOption.some(item => item.id === option?.id)
@@ -11,7 +13,7 @@ export default function OptionCard({ option, selectedOption }) {
     return (
         <View style={[{
             padding: 20,
-            backgroundColor: '#fff',
+            backgroundColor: colors.card,
             borderRadius: 15,
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 2 },
@@ -25,18 +27,18 @@ export default function OptionCard({ option, selectedOption }) {
         }, isSelected && {
             borderWidth: 2,
             borderColor: Colors.PRIMARY,
-            backgroundColor: '#f0f7ff'
+            backgroundColor: theme === 'dark' ? 'rgba(11, 102, 255, 0.15)' : '#f0f7ff'
         }]}>
             <View style={{ flex: 1 }}>
                 <Text style={{
                     fontSize: 18,
                     fontFamily: 'outfit-bold',
-                    color: isSelected ? Colors.PRIMARY : Colors.BLACK
+                    color: isSelected ? Colors.PRIMARY : colors.text
                 }}>{option.title}</Text>
                 <Text style={{
                     fontSize: 15,
                     fontFamily: 'outfit',
-                    color: Colors.GRAY,
+                    color: colors.icon,
                     marginTop: 5
                 }}>{option?.desc}</Text>
             </View>

@@ -10,17 +10,20 @@ import { CreateTripContext } from '../../context/CreateTripContext';
 
 const { width } = Dimensions.get('window');
 
+import { useTheme } from '../../context/ThemeContext';
+
 export default function PackageDetail() {
     const { packageId } = useLocalSearchParams();
     const router = useRouter();
     const { setTripData } = useContext(CreateTripContext);
+    const { colors } = useTheme();
 
     const pkg = TripPackages.find(p => p.id.toString() === packageId);
 
     if (!pkg) {
         return (
-            <View style={styles.container}>
-                <Text>Package not found</Text>
+            <View style={[styles.container, { backgroundColor: colors.background }]}>
+                <Text style={{ color: colors.text }}>Package not found</Text>
             </View>
         );
     }
@@ -32,7 +35,7 @@ export default function PackageDetail() {
     };
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
             <ScrollView contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
                 {/* Hero Image */}
                 <View style={styles.imageContainer}>
@@ -56,68 +59,68 @@ export default function PackageDetail() {
                     </View>
                 </View>
 
-                <View style={styles.contentContainer}>
+                <View style={[styles.contentContainer, { backgroundColor: colors.background }]}>
                     {/* Overview */}
-                    <Text style={styles.sectionTitle}>Overview</Text>
-                    <Text style={styles.description}>{pkg.desc}</Text>
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>Overview</Text>
+                    <Text style={[styles.description, { color: colors.text }]}>{pkg.desc}</Text>
 
                     <View style={styles.tagsContainer}>
                         {pkg.tags.map((tag, index) => (
-                            <View key={index} style={styles.tag}>
-                                <Text style={styles.tagText}>{tag}</Text>
+                            <View key={index} style={[styles.tag, { backgroundColor: colors.card }]}>
+                                <Text style={[styles.tagText, { color: colors.text }]}>{tag}</Text>
                             </View>
                         ))}
                     </View>
 
                     {/* Package Details */}
-                    <Text style={styles.sectionTitle}>What's Included</Text>
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>What's Included</Text>
 
                     <View style={styles.detailRow}>
-                        <View style={styles.detailIcon}>
+                        <View style={[styles.detailIcon, { backgroundColor: colors.card }]}>
                             <Ionicons name="location" size={24} color={Colors.PRIMARY} />
                         </View>
                         <View>
-                            <Text style={styles.detailLabel}>Destination</Text>
-                            <Text style={styles.detailValue}>{pkg.tripData.locationInfo.name}</Text>
+                            <Text style={[styles.detailLabel, { color: colors.icon }]}>Destination</Text>
+                            <Text style={[styles.detailValue, { color: colors.text }]}>{pkg.tripData.locationInfo.name}</Text>
                         </View>
                     </View>
 
                     <View style={styles.detailRow}>
-                        <View style={styles.detailIcon}>
+                        <View style={[styles.detailIcon, { backgroundColor: colors.card }]}>
                             <Ionicons name="people" size={24} color={Colors.PRIMARY} />
                         </View>
                         <View>
-                            <Text style={styles.detailLabel}>Travelers</Text>
-                            <Text style={styles.detailValue}>{pkg.tripData.traveler.title}</Text>
+                            <Text style={[styles.detailLabel, { color: colors.icon }]}>Travelers</Text>
+                            <Text style={[styles.detailValue, { color: colors.text }]}>{pkg.tripData.traveler.title}</Text>
                         </View>
                     </View>
 
                     <View style={styles.detailRow}>
-                        <View style={styles.detailIcon}>
+                        <View style={[styles.detailIcon, { backgroundColor: colors.card }]}>
                             <Ionicons name="wallet" size={24} color={Colors.PRIMARY} />
                         </View>
                         <View>
-                            <Text style={styles.detailLabel}>Budget Range</Text>
-                            <Text style={styles.detailValue}>{pkg.tripData.budget.title}</Text>
+                            <Text style={[styles.detailLabel, { color: colors.icon }]}>Budget Range</Text>
+                            <Text style={[styles.detailValue, { color: colors.text }]}>{pkg.tripData.budget.title}</Text>
                         </View>
                     </View>
 
                     {/* Itinerary Preview Mockup (Static for package feel) */}
-                    <Text style={styles.sectionTitle}>Itinerary Highlights</Text>
-                    <View style={styles.itineraryCard}>
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>Itinerary Highlights</Text>
+                    <View style={[styles.itineraryCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
                         <View style={styles.dayRow}>
                             <View style={styles.dayBadge}><Text style={styles.dayText}>Day 1</Text></View>
-                            <Text style={styles.dayDesc}>Arrival & City Exploration</Text>
+                            <Text style={[styles.dayDesc, { color: colors.text }]}>Arrival & City Exploration</Text>
                         </View>
                         <View style={styles.connector} />
                         <View style={styles.dayRow}>
                             <View style={styles.dayBadge}><Text style={styles.dayText}>Day 2</Text></View>
-                            <Text style={styles.dayDesc}>Guided Tours & Local Cuisine</Text>
+                            <Text style={[styles.dayDesc, { color: colors.text }]}>Guided Tours & Local Cuisine</Text>
                         </View>
                         <View style={styles.connector} />
                         <View style={styles.dayRow}>
                             <View style={styles.dayBadge}><Text style={styles.dayText}>Day {parseInt(pkg.duration)}</Text></View>
-                            <Text style={styles.dayDesc}>Leisure & Departure</Text>
+                            <Text style={[styles.dayDesc, { color: colors.text }]}>Leisure & Departure</Text>
                         </View>
                     </View>
 
@@ -125,17 +128,17 @@ export default function PackageDetail() {
             </ScrollView>
 
             {/* Bottom Booking Bar */}
-            <View style={styles.footer}>
+            <View style={[styles.footer, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
                 <View>
-                    <Text style={styles.footerPriceLabel}>Total Price</Text>
-                    <Text style={styles.footerPrice}>
+                    <Text style={[styles.footerPriceLabel, { color: colors.icon }]}>Total Price</Text>
+                    <Text style={[styles.footerPrice, { color: colors.text }]}>
                         {pkg.price === 'Cheap' ? '$800 - $1200' :
                             pkg.price === 'Moderate' ? '$1500 - $2500' :
                                 '$3500+'}
                     </Text>
                 </View>
-                <TouchableOpacity style={styles.bookButton} onPress={handleBookNow}>
-                    <Text style={styles.bookButtonText}>Book This Trip</Text>
+                <TouchableOpacity style={[styles.bookButton, { backgroundColor: Colors.PRIMARY }]} onPress={handleBookNow}>
+                    <Text style={[styles.bookButtonText, { color: '#fff' }]}>Book This Trip</Text>
                 </TouchableOpacity>
             </View>
         </View>

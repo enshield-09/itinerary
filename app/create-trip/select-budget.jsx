@@ -16,12 +16,14 @@ import OptionCard from '../../components/CreateTrip/OptionCard';
 import Colors from '../../constants/Colors';
 import { SelectBudgetOptions } from '../../constants/Options';
 import { CreateTripContext } from '../../context/CreateTripContext';
+import { useTheme } from '../../context/ThemeContext';
 
 const { height } = Dimensions.get('window');
 
 export default function SelectBudget() {
   const router = useRouter();
   const { tripData, setTripData } = useContext(CreateTripContext);
+  const { colors, theme } = useTheme();
   const [selectedOption, setSelectedOption] = useState(null);
 
   const onContinue = () => {
@@ -97,11 +99,11 @@ export default function SelectBudget() {
       </Animated.View>
 
       {/* Foreground UI (unchanged logic) */}
-      <View style={styles.container}>
-        <Text style={styles.title}>Budget</Text>
+      <View style={[styles.container, { backgroundColor: theme === 'dark' ? 'rgba(0,0,0,0.85)' : 'rgba(255,255,255,0.85)' }]}>
+        <Text style={[styles.title, { color: colors.text }]}>Budget</Text>
 
         <View style={{ marginTop: 25, flex: 1 }}>
-          <Text style={styles.subtitle}>Choose spending habits for your trip</Text>
+          <Text style={[styles.subtitle, { color: colors.icon }]}>Choose spending habits for your trip</Text>
 
           <FlatList
             data={SelectBudgetOptions}
@@ -121,7 +123,7 @@ export default function SelectBudget() {
 
         <TouchableOpacity
           onPress={onContinue}
-          style={styles.continueButton}
+          style={[styles.continueButton, { backgroundColor: Colors.PRIMARY }]}
         >
           <Text style={styles.continueText}>Continue</Text>
         </TouchableOpacity>
@@ -148,7 +150,7 @@ const styles = StyleSheet.create({
     padding: 25,
     paddingTop: 75,
     paddingBottom: 30,
-    backgroundColor: 'rgba(255,255,255,0.85)',
+    // backgroundColor: 'rgba(255,255,255,0.85)', // Moved
   },
   title: {
     fontSize: 35,
@@ -163,7 +165,7 @@ const styles = StyleSheet.create({
   },
   continueButton: {
     padding: 18,
-    backgroundColor: Colors.BLACK,
+    // backgroundColor: Colors.BLACK, // Moved
     borderRadius: 50,
     marginTop: 20,
     alignItems: 'center',

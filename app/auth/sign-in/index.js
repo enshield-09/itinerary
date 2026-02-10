@@ -18,10 +18,12 @@ import {
 import { auth } from '../../../configs/FirebaseConfig';
 import Colors from '../../../constants/Colors';
 import { Image } from 'expo-image';
+import { useTheme } from '../../../context/ThemeContext';
 
 export default function SignIn() {
   const navigation = useNavigation();
   const router = useRouter();
+  const { colors, theme } = useTheme();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -104,28 +106,40 @@ export default function SignIn() {
             <Text style={styles.title}>Lets Sign You In</Text>
             <Text style={styles.subtitle}>Welcome Back</Text>
 
-            <View style={styles.form}>
+            <View style={[styles.form, { backgroundColor: theme === 'dark' ? 'rgba(30,30,30,0.96)' : 'rgba(255,255,255,0.96)' }]}>
               {/* Email */}
-              <Text style={styles.label}>Email</Text>
+              <Text style={[styles.label, { color: colors.text }]}>Email</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, {
+                  backgroundColor: theme === 'dark' ? '#333' : '#fff',
+                  color: colors.text,
+                  borderColor: colors.border
+                }]}
                 onChangeText={(value) => setEmail(value)}
                 placeholder="Enter Email"
-                placeholderTextColor="#888"
+                placeholderTextColor={colors.icon}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 value={email}
               />
 
               {/* Password */}
-              <Text style={[styles.label, { marginTop: 18 }]}>Password</Text>
-              <View style={styles.passwordContainer}>
+              <Text style={[styles.label, { marginTop: 18, color: colors.text }]}>Password</Text>
+              <View style={[styles.passwordContainer, {
+                backgroundColor: theme === 'dark' ? '#333' : '#fff',
+                borderColor: colors.border
+              }]}>
                 <TextInput
                   secureTextEntry={!showPassword}
                   onChangeText={(value) => setPassword(value)}
-                  style={[styles.input, { flex: 1, borderWidth: 0 }]}
+                  style={[styles.input, {
+                    flex: 1,
+                    borderWidth: 0,
+                    backgroundColor: 'transparent', // Inherit from container
+                    color: colors.text
+                  }]}
                   placeholder="Enter password"
-                  placeholderTextColor="#888"
+                  placeholderTextColor={colors.icon}
                   value={password}
                 />
                 <TouchableOpacity
@@ -133,7 +147,7 @@ export default function SignIn() {
                   style={styles.eyeIcon}
                   activeOpacity={0.7}
                 >
-                  <Ionicons name={showPassword ? 'eye' : 'eye-off'} size={22} color="#666" />
+                  <Ionicons name={showPassword ? 'eye' : 'eye-off'} size={22} color={colors.icon} />
                 </TouchableOpacity>
               </View>
 
@@ -150,7 +164,7 @@ export default function SignIn() {
               {/* Sign in button */}
               <TouchableOpacity
                 onPress={onSignIn}
-                style={[styles.button, loading ? styles.buttonDisabled : null]}
+                style={[styles.button, loading ? styles.buttonDisabled : null, { backgroundColor: Colors.PRIMARY }]}
                 disabled={loading}
               >
                 {loading ? (
@@ -165,7 +179,7 @@ export default function SignIn() {
                 onPress={() => router.replace('auth/sign-up')}
                 style={styles.outlineButton}
               >
-                <Text style={styles.outlineText}>Create Account</Text>
+                <Text style={[styles.outlineText, { color: colors.text }]}>Create Account</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -220,7 +234,7 @@ const styles = StyleSheet.create({
   },
   form: {
     marginTop: 40,
-    backgroundColor: 'rgba(255,255,255,0.96)',
+    // backgroundColor: 'rgba(255,255,255,0.96)', // Moved directly to component style
     borderRadius: 18,
     padding: 30,
     shadowColor: '#000',
@@ -231,7 +245,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontFamily: 'outfit-medium',
-    color: '#333',
+    // color: '#333', // Moved
     fontSize: 18,
     marginBottom: 8
   },
@@ -242,8 +256,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     fontFamily: 'outfit',
     fontSize: 16,
-    backgroundColor: '#fff',
-    color: '#111'
+    // backgroundColor: '#fff', // Moved
+    // color: '#111' // Moved
   },
   passwordContainer: {
     flexDirection: 'row',
@@ -251,7 +265,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e6e6e6',
     borderRadius: 12,
-    backgroundColor: '#fff',
+    // backgroundColor: '#fff', // Moved
     paddingRight: 10
   },
   eyeIcon: {
@@ -262,7 +276,7 @@ const styles = StyleSheet.create({
     marginTop: 40,
     padding: 18,
     borderRadius: 12,
-    backgroundColor: Colors.PRIMARY || '#0B66FF',
+    // backgroundColor: Colors.PRIMARY || '#0B66FF',
     alignItems: 'center',
     shadowColor: Colors.PRIMARY,
     shadowOffset: { width: 0, height: 4 },
@@ -285,7 +299,7 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   outlineText: {
-    color: '#666',
+    // color: '#666', // Moved
     fontFamily: 'outfit-medium',
     fontSize: 16
   }

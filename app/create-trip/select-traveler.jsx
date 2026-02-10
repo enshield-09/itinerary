@@ -1,4 +1,4 @@
-import { Link, useNavigation } from 'expo-router';
+import { Link, useNavigation, useRouter } from 'expo-router';
 import { useIsFocused } from '@react-navigation/native';
 import { useContext, useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Easing, FlatList, ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -12,6 +12,7 @@ const { width, height } = Dimensions.get('window');
 export default function SelectTraveler() {
 
   const navigation = useNavigation();
+  const router = useRouter();
   const [selectedTraveler, setSelectedTraveler] = useState();
   const { tripData, setTripData } = useContext(CreateTripContext);
 

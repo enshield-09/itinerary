@@ -12,11 +12,13 @@ import {
 import { DatePickerModal } from 'react-native-paper-dates';
 import { Colors } from './../../constants/theme';
 import { CreateTripContext } from './../../context/CreateTripContext';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function SelectDates() {
   const navigation = useNavigation();
   const router = useRouter();
   const { tripData, setTripData } = useContext(CreateTripContext);
+  const { colors, theme } = useTheme();
 
   const [open, setOpen] = useState(false);
   const [range, setRange] = useState({ startDate: undefined, endDate: undefined });
@@ -77,19 +79,25 @@ export default function SelectDates() {
       style={styles.background}
       resizeMode="cover"
     >
-      <View style={styles.container}>
-        <Text style={styles.headerText}>Travel Dates</Text>
+      <View style={[styles.container, { backgroundColor: theme === 'dark' ? 'rgba(0,0,0,0.85)' : 'rgba(255,255,255,0.85)' }]}>
+        <View>
+          <Text style={[styles.headerText, { color: colors.text }]}>Travel Dates</Text>
 
-        <TouchableOpacity
-          onPress={() => setOpen(true)}
-          style={[styles.selectButton, { marginTop: 60 }]}
-        >
-          <Text style={styles.selectButtonText}>
-            {range.startDate && range.endDate
-              ? `From ${range.startDate.toLocaleDateString()} to ${range.endDate.toLocaleDateString()}`
-              : 'Select Travel Dates'}
-          </Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setOpen(true)}
+            style={[styles.selectButton, {
+              marginTop: 60,
+              backgroundColor: colors.card,
+              borderColor: colors.border
+            }]}
+          >
+            <Text style={[styles.selectButtonText, { color: colors.text }]}>
+              {range.startDate && range.endDate
+                ? `From ${range.startDate.toLocaleDateString()} to ${range.endDate.toLocaleDateString()}`
+                : 'Select Travel Dates'}
+            </Text>
+          </TouchableOpacity>
+        </View>
 
         <DatePickerModal
           locale="en"
@@ -104,7 +112,7 @@ export default function SelectDates() {
 
         <TouchableOpacity
           onPress={onContinue}
-          style={styles.continueButton}
+          style={[styles.continueButton, { backgroundColor: Colors.PRIMARY }]}
         >
           <Text style={styles.continueButtonText}>Continue</Text>
         </TouchableOpacity>
@@ -126,21 +134,21 @@ const styles = StyleSheet.create({
     padding: 25,
     paddingTop: 70,
     paddingBottom: 30,
-    backgroundColor: 'rgba(255,255,255,0.85)',
+    // backgroundColor: 'rgba(255,255,255,0.85)', // Moved to style prop
     justifyContent: 'space-between'
   },
   headerText: {
     fontFamily: 'outfit-bold',
     fontSize: 35,
     marginTop: 20,
-    color: Colors.BLACK
+    // color: Colors.BLACK // Moved
   },
   selectButton: {
     padding: 15,
     borderRadius: 15,
     borderWidth: 1,
-    borderColor: '#ddd',
-    backgroundColor: Colors.WHITE,
+    // borderColor: '#ddd', // Moved
+    // backgroundColor: Colors.WHITE, // Moved
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -149,12 +157,12 @@ const styles = StyleSheet.create({
   },
   selectButtonText: {
     fontSize: 18,
-    color: Colors.BLACK,
+    // color: Colors.BLACK, // Moved
     fontFamily: 'outfit-medium'
   },
   continueButton: {
     paddingVertical: 18,
-    backgroundColor: Colors.BLACK,
+    // backgroundColor: Colors.BLACK, // Moved
     borderRadius: 50,
     alignItems: 'center',
     marginTop: 20,
