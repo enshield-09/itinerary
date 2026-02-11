@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { useContext, useState, useRef, useEffect } from 'react';
+import { useContext, useState, useRef, useEffect, useMemo } from 'react';
 import { Dimensions, StyleSheet, Text, TextInput, TouchableOpacity, View, ScrollView, Animated, Easing, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '../../constants/Colors';
@@ -10,17 +10,86 @@ import { CreateTripContext } from '../../context/CreateTripContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import { auth, db } from '../../configs/FirebaseConfig';
 import { collection, query, where, getDocs } from 'firebase/firestore';
+import { useTheme } from '../../context/ThemeContext';
+import React from 'react';
 
 const { width } = Dimensions.get('window');
 const cardWidth = (width - 60) / 2;
 
-import { useTheme } from '../../context/ThemeContext';
+// Memoized Package Card
+const PackageCard = React.memo(({ item, index, theme, colors, onPress }) => (
+  <TouchableOpacity
+    style={[styles.packageCard, { backgroundColor: colors.card, shadowColor: colors.shadow }]}
+    onPress={() => onPress(item)}
+    activeOpacity={0.9}
+  >
+    <Image
+      source={item.image}
+      style={styles.packageImage}
+      contentFit="cover"
+      cachePolicy="memory-disk"
+      transition={200}
+    />
+    <View style={[styles.packageBadge, { backgroundColor: theme === 'dark' ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.9)' }]}>
+      <Text style={styles.packageBadgeText}>{item.duration}</Text>
+    </View>
+    {item.score > 0 && index < 3 && (
+      <View style={styles.matchBadge}>
+        <Ionicons name="heart" size={10} color="#fff" />
+        <Text style={styles.matchText}>Top Match</Text>
+      </View>
+    )}
+    <LinearGradient
+      colors={['transparent', 'rgba(0,0,0,0.8)']}
+      style={styles.packageOverlay}
+    >
+      <Text style={styles.packageTitle}>{item.name}</Text>
+      <Text style={styles.packageDesc}>{item.desc}</Text>
+      <View style={styles.tagRow}>
+        {(item.tags || []).slice(0, 2).map((tag, i) => (
+          <View key={i} style={styles.tagChip}>
+            <Text style={styles.tagText}>{tag}</Text>
+          </View>
+        ))}
+      </View>
+      <View style={styles.packageFooter}>
+        <Text style={styles.packagePrice}>{item.price}</Text>
+        <View style={styles.packageButton}>
+          <Text style={styles.packageButtonText}>View Plan</Text>
+          <Ionicons name="arrow-forward" size={14} color="white" />
+        </View>
+      </View>
+    </LinearGradient>
+  </TouchableOpacity>
+));
+
+// Memoized Place Card
+const PlaceCard = React.memo(({ item, colors, onPress }) => (
+  <TouchableOpacity
+    style={[styles.placeCard, { backgroundColor: colors.card, shadowColor: colors.shadow }]}
+    onPress={() => onPress(item)}
+    activeOpacity={0.8}
+  >
+    <Image
+      source={item.image}
+      style={styles.cardImage}
+      contentFit="cover"
+      transition={200}
+      cachePolicy="memory-disk"
+    />
+    <View style={styles.cardOverlay}>
+      <Text style={styles.placeName}>{item.name}</Text>
+      <Text style={styles.placeDesc} numberOfLines={1}>{item.desc}</Text>
+    </View>
+  </TouchableOpacity>
+));
 
 export default function Discover() {
   const router = useRouter();
   const { setTripData } = useContext(CreateTripContext);
   const { colors, theme } = useTheme();
-  // Animation
+
+  // Animation Refs
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(50)).current;
 
@@ -28,7 +97,7 @@ export default function Discover() {
   const [userPreferences, setUserPreferences] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const categories = ['All', 'Mountain', 'Beach', 'City', 'Adventure'];
+  const categories = useMemo(() => ['All', 'Mountain', 'Beach', 'City', 'Adventure'], []);
 
   const [filteredPackages, setFilteredPackages] = useState(TripPackages);
 
@@ -49,20 +118,16 @@ export default function Discover() {
         setLoadingPrefs(false);
         return;
       }
-
-      // Fetch user's past trips to understand preferences
       const q = query(collection(db, 'ItineraryApp'), where('userEmail', '==', user.email));
       const snapshot = await getDocs(q);
 
       const prefs = [];
       snapshot.forEach(doc => {
         const data = doc.data();
-        // Extract keywords from trip data if available
-        // This is a simplified preference extraction
         if (data.tripData) {
           try {
             const parsed = JSON.parse(data.tripData);
-            if (parsed.budget) prefs.push(parsed.budget); // e.g., 'Cheap', 'Luxury'
+            if (parsed.budget) prefs.push(parsed.budget);
           } catch (e) { }
         }
       });
@@ -76,30 +141,16 @@ export default function Discover() {
 
   const startAnimations = () => {
     Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true
-      }),
-      Animated.timing(translateY, {
-        toValue: 0,
-        duration: 800,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true
-      })
+      Animated.timing(fadeAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
+      Animated.timing(translateY, { toValue: 0, duration: 600, useNativeDriver: true })
     ]).start();
   };
 
   const filterPackages = () => {
     let result = TripPackages;
-
-    // 1. Filter by category
     if (selectedCategory !== 'All') {
       result = result.filter(item => (item.tags || []).includes(selectedCategory));
     }
-
-    // 2. Filter by search query
     if (searchQuery) {
       const lowerQ = searchQuery.toLowerCase();
       result = result.filter(item =>
@@ -107,20 +158,14 @@ export default function Discover() {
         item.desc.toLowerCase().includes(lowerQ)
       );
     }
-
-    // 3. Score based on user preferences (simple scoring)
     const scored = result.map(item => {
       let score = 0;
-      // Boost score if item matches user budget preference
       if (userPreferences.some(pref => (item.tags || []).includes(pref))) {
         score += 5;
       }
       return { ...item, score };
     });
-
-    // Sort by score descending
     scored.sort((a, b) => b.score - a.score);
-
     setFilteredPackages(scored);
   };
 
@@ -133,10 +178,9 @@ export default function Discover() {
   };
 
   const handlePackagePress = (pkg) => {
-    // Pre-fill trip creation with package details
     setTripData({
       locationInfo: { name: pkg.name, coordinates: pkg.coordinates },
-      budget: pkg.budget, // Assume package has budget info or default
+      budget: pkg.budget,
     });
     router.push('/create-trip/select-traveler');
   };
@@ -150,7 +194,6 @@ export default function Discover() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      {/* Decorative Gradient Header Background */}
       <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 180, zIndex: 0 }}>
         <LinearGradient
           colors={[theme === 'dark' ? colors.card : '#E0F7FA', 'transparent']}
@@ -158,7 +201,7 @@ export default function Discover() {
         />
       </View>
 
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false} removeClippedSubviews={true}>
         {/* Header */}
         <Animated.View style={[styles.header, { opacity: fadeAnim, transform: [{ translateY }] }]}>
           <Text style={[styles.title, { color: colors.text }]}>Discover</Text>
@@ -169,7 +212,7 @@ export default function Discover() {
           </Text>
         </Animated.View>
 
-        {/* Search Bar */}
+        {/* Search */}
         <Animated.View style={[styles.searchContainer, { opacity: fadeAnim, transform: [{ translateY }] }]}>
           <View style={[styles.searchBar, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <Ionicons name="search" size={20} color={colors.icon} />
@@ -196,7 +239,7 @@ export default function Discover() {
           )}
         </Animated.View>
 
-        {/* Category Filter Pills */}
+        {/* Categories */}
         <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY }] }}>
           <ScrollView
             horizontal
@@ -222,7 +265,7 @@ export default function Discover() {
           </ScrollView>
         </Animated.View>
 
-        {/* Personalized Trip Packages */}
+        {/* Packages */}
         <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY }] }}>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
@@ -244,75 +287,30 @@ export default function Discover() {
           ) : (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: 20 }}>
               {filteredPackages.map((item, index) => (
-                <TouchableOpacity
+                <PackageCard
                   key={item.id}
-                  style={[styles.packageCard, { backgroundColor: colors.card, shadowColor: colors.shadow }]}
-                  onPress={() => handlePackagePress(item)}
-                  activeOpacity={0.9}
-                >
-                  <Image
-                    source={item.image}
-                    style={styles.packageImage}
-                    contentFit="cover"
-                  />
-                  <View style={[styles.packageBadge, { backgroundColor: theme === 'dark' ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.9)' }]}>
-                    <Text style={styles.packageBadgeText}>{item.duration}</Text>
-                  </View>
-                  {item.score > 0 && index < 3 && (
-                    <View style={styles.matchBadge}>
-                      <Ionicons name="heart" size={10} color="#fff" />
-                      <Text style={styles.matchText}>Top Match</Text>
-                    </View>
-                  )}
-                  <LinearGradient
-                    colors={['transparent', 'rgba(0,0,0,0.8)']}
-                    style={styles.packageOverlay}
-                  >
-                    <Text style={styles.packageTitle}>{item.name}</Text>
-                    <Text style={styles.packageDesc}>{item.desc}</Text>
-                    <View style={styles.tagRow}>
-                      {(item.tags || []).slice(0, 2).map((tag, i) => (
-                        <View key={i} style={styles.tagChip}>
-                          <Text style={styles.tagText}>{tag}</Text>
-                        </View>
-                      ))}
-                    </View>
-                    <View style={styles.packageFooter}>
-                      <Text style={styles.packagePrice}>{item.price}</Text>
-                      <View style={styles.packageButton}>
-                        <Text style={styles.packageButtonText}>View Plan</Text>
-                        <Ionicons name="arrow-forward" size={14} color="white" />
-                      </View>
-                    </View>
-                  </LinearGradient>
-                </TouchableOpacity>
+                  item={item}
+                  index={index}
+                  theme={theme}
+                  colors={colors}
+                  onPress={handlePackagePress}
+                />
               ))}
             </ScrollView>
           )}
         </Animated.View>
 
-        {/* Popular Destinations */}
+        {/* Places Grid */}
         <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY }], marginTop: 25 }}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Popular Destinations</Text>
           <View style={styles.grid}>
-            {PopularPlaces.map((item, index) => (
-              <TouchableOpacity
+            {PopularPlaces.map((item) => (
+              <PlaceCard
                 key={item.id}
-                style={[styles.placeCard, { backgroundColor: colors.card, shadowColor: colors.shadow }]}
-                onPress={() => handlePopularPlacePress(item)}
-                activeOpacity={0.8}
-              >
-                <Image
-                  source={item.image}
-                  style={styles.cardImage}
-                  contentFit="cover"
-                  transition={300}
-                />
-                <View style={styles.cardOverlay}>
-                  <Text style={styles.placeName}>{item.name}</Text>
-                  <Text style={styles.placeDesc} numberOfLines={1}>{item.desc}</Text>
-                </View>
-              </TouchableOpacity>
+                item={item}
+                colors={colors}
+                onPress={handlePopularPlacePress}
+              />
             ))}
           </View>
         </Animated.View>
@@ -397,16 +395,10 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginRight: 10,
   },
-  categoryPillActive: {
-    backgroundColor: Colors.PRIMARY,
-  },
   categoryText: {
     fontFamily: 'outfit-medium',
     fontSize: 13,
     color: Colors.GRAY,
-  },
-  categoryTextActive: {
-    color: '#fff',
   },
   sectionHeader: {
     flexDirection: 'row',
