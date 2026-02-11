@@ -15,7 +15,97 @@ export default function MyTrip() {
   const router = useRouter();
   const { colors } = useTheme();
   const [userTrips, setUserTrips] = useState([]);
-  // ... (keep logic)
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(50)).current;
+
+  useEffect(() => {
+    userTrips.length === 0 && GetMyTrips();
+  }, []);
+
+  const GetMyTrips = async () => {
+    setLoading(true);
+    setUserTrips([]);
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+      const q = query(collection(db, 'ItineraryApp'), where('userEmail', '==', user.email));
+      const querySnapshot = await getDocs(q);
+      const data = [];
+      querySnapshot.forEach((doc) => {
+        data.push({ id: doc.id, ...doc.data() });
+      });
+      setUserTrips(data);
+    } catch (error) {
+      console.error("Error fetching trips:", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+      startAnimations();
+    }
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    GetMyTrips();
+  };
+
+  const startAnimations = () => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true
+      }),
+      Animated.timing(translateY, {
+        toValue: 0,
+        duration: 800,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true
+      })
+    ]).start();
+  };
+
+  const handleDeleteTrip = (tripId) => {
+    Alert.alert(
+      "Delete Trip",
+      "Are you sure you want to delete this trip?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteDoc(doc(db, "ItineraryApp", tripId));
+              setUserTrips(prev => prev.filter(trip => trip.id !== tripId));
+            } catch (error) {
+              console.error("Error deleting trip:", error);
+              Alert.alert("Error", "Failed to delete trip.");
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const filteredTrips = userTrips.filter(trip => {
+    try {
+      const tripData = typeof trip.tripData === 'string' ? JSON.parse(trip.tripData) : trip.tripData;
+      const locationName = tripData?.locationInfo?.name || '';
+      return locationName.toLowerCase().includes(searchQuery.toLowerCase());
+    } catch (e) {
+      return true;
+    }
+  });
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>

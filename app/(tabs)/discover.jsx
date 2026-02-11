@@ -20,9 +20,133 @@ export default function Discover() {
   const router = useRouter();
   const { setTripData } = useContext(CreateTripContext);
   const { colors, theme } = useTheme();
-  // ... (state)
+  // Animation
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(50)).current;
 
-  // ... (effects and logic)
+  const [loadingPrefs, setLoadingPrefs] = useState(true);
+  const [userPreferences, setUserPreferences] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const categories = ['All', 'Mountain', 'Beach', 'City', 'Adventure'];
+
+  const [filteredPackages, setFilteredPackages] = useState(TripPackages);
+
+  useEffect(() => {
+    fetchUserPreferences();
+    startAnimations();
+  }, []);
+
+  useEffect(() => {
+    filterPackages();
+  }, [selectedCategory, userPreferences, searchQuery]);
+
+  const fetchUserPreferences = async () => {
+    setLoadingPrefs(true);
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        setLoadingPrefs(false);
+        return;
+      }
+
+      // Fetch user's past trips to understand preferences
+      const q = query(collection(db, 'ItineraryApp'), where('userEmail', '==', user.email));
+      const snapshot = await getDocs(q);
+
+      const prefs = [];
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        // Extract keywords from trip data if available
+        // This is a simplified preference extraction
+        if (data.tripData) {
+          try {
+            const parsed = JSON.parse(data.tripData);
+            if (parsed.budget) prefs.push(parsed.budget); // e.g., 'Cheap', 'Luxury'
+          } catch (e) { }
+        }
+      });
+      setUserPreferences(prefs);
+    } catch (e) {
+      console.log("Error fetching preferences", e);
+    } finally {
+      setLoadingPrefs(false);
+    }
+  };
+
+  const startAnimations = () => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true
+      }),
+      Animated.timing(translateY, {
+        toValue: 0,
+        duration: 800,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true
+      })
+    ]).start();
+  };
+
+  const filterPackages = () => {
+    let result = TripPackages;
+
+    // 1. Filter by category
+    if (selectedCategory !== 'All') {
+      result = result.filter(item => (item.tags || []).includes(selectedCategory));
+    }
+
+    // 2. Filter by search query
+    if (searchQuery) {
+      const lowerQ = searchQuery.toLowerCase();
+      result = result.filter(item =>
+        item.name.toLowerCase().includes(lowerQ) ||
+        item.desc.toLowerCase().includes(lowerQ)
+      );
+    }
+
+    // 3. Score based on user preferences (simple scoring)
+    const scored = result.map(item => {
+      let score = 0;
+      // Boost score if item matches user budget preference
+      if (userPreferences.some(pref => (item.tags || []).includes(pref))) {
+        score += 5;
+      }
+      return { ...item, score };
+    });
+
+    // Sort by score descending
+    scored.sort((a, b) => b.score - a.score);
+
+    setFilteredPackages(scored);
+  };
+
+  const handleQuickTripSearch = () => {
+    if (!searchQuery) return;
+    router.push({
+      pathname: '/create-trip/search-place',
+      params: { query: searchQuery }
+    });
+  };
+
+  const handlePackagePress = (pkg) => {
+    // Pre-fill trip creation with package details
+    setTripData({
+      locationInfo: { name: pkg.name, coordinates: pkg.coordinates },
+      budget: pkg.budget, // Assume package has budget info or default
+    });
+    router.push('/create-trip/select-traveler');
+  };
+
+  const handlePopularPlacePress = (place) => {
+    router.push({
+      pathname: '/discover/place-detail',
+      params: place
+    });
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>

@@ -17,11 +17,80 @@ export default function Profile() {
   const user = auth.currentUser;
   const { theme, toggleTheme, colors } = useTheme();
   const [tripCount, setTripCount] = useState(0);
-  // ... (keep state and animations)
+  const [recentTrips, setRecentTrips] = useState([]);
 
-  // ... (keep useEffect and fetchTripData)
+  // Animation Refs
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.9)).current;
 
-  // ... (keep handleSignOut and navigateToTrip)
+  useEffect(() => {
+    fetchTripData();
+    startAnimations();
+  }, [user]);
+
+  const startAnimations = () => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 6,
+        tension: 40,
+        useNativeDriver: true
+      })
+    ]).start();
+  };
+
+  const fetchTripData = async () => {
+    if (!user) return;
+    try {
+      const q = query(
+        collection(db, 'ItineraryApp'),
+        where('userEmail', '==', user.email),
+        orderBy('docId', 'desc') // Assuming docId can effectively sort, or add timestamp
+      );
+      const snapshot = await getDocs(q);
+      const trips = [];
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        let parsed = {};
+        try {
+          parsed = typeof data.tripData === 'string' ? JSON.parse(data.tripData) : data.tripData;
+        } catch (e) { }
+
+        trips.push({
+          docId: doc.id,
+          locationName: parsed?.locationInfo?.name || 'Unknown Location',
+          startDate: parsed?.startDate ? moment(parsed.startDate).format('YYYY-MM-DD') : null
+        });
+      });
+
+      setTripCount(trips.length);
+      setRecentTrips(trips.slice(0, 5)); // precise recent 5
+    } catch (e) {
+      console.log('Error fetching profile data', e);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      router.replace('/auth/sign-in');
+    } catch (error) {
+      console.log('Error signing out: ', error);
+    }
+  };
+
+  const navigateToTrip = (id) => {
+    router.push({
+      pathname: '/trip-details',
+      params: { docId: id }
+    });
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>

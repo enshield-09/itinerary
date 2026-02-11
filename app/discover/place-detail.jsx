@@ -170,7 +170,6 @@ export default function PlaceDetail() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.WHITE,
   },
   loadingContainer: {
     flex: 1,
@@ -181,7 +180,6 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 10,
     fontSize: 16,
-    color: Colors.GRAY,
   },
   errorContainer: {
     flex: 1,
@@ -191,7 +189,6 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 16,
-    color: Colors.RED,
   },
   heroContainer: {
     position: 'relative',
@@ -212,7 +209,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontFamily: 'outfit-bold',
-    color: '#1a1a1a',
     marginBottom: 15,
   },
   infoRow: {
@@ -227,7 +223,6 @@ const styles = StyleSheet.create({
   infoText: {
     fontSize: 15,
     fontFamily: 'outfit',
-    color: '#666',
     flex: 1,
   },
   descriptionSection: {
@@ -237,13 +232,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontFamily: 'outfit-bold',
-    color: '#1a1a1a',
     marginBottom: 12,
   },
   description: {
     fontSize: 15,
     fontFamily: 'outfit',
-    color: '#444',
     lineHeight: 22,
   },
   gallerySection: {
@@ -255,17 +248,18 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginRight: 15,
   },
+  galleryScroll: {
+    // added to ensure scroll view style is applied if needed
+  },
   attractionsSection: {
     marginBottom: 25,
   },
   attractionCard: {
     flexDirection: 'row',
-    backgroundColor: '#f9f9f9',
     borderRadius: 12,
     padding: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
   },
   attractionImage: {
     width: 80,
@@ -279,20 +273,16 @@ const styles = StyleSheet.create({
   attractionName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1a1a1a',
     marginBottom: 4,
   },
   attractionRating: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 4,
   },
   attractionAddress: {
     fontSize: 12,
-    color: '#999',
   },
   addButton: {
-    backgroundColor: Colors.BLACK,
     padding: 18,
     borderRadius: 12,
     alignItems: 'center',
@@ -300,7 +290,7 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   addButtonText: {
-    color: Colors.WHITE,
+    color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '600',
   },
