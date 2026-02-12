@@ -9,7 +9,8 @@ export const ThemeProvider = ({ children }) => {
     const [theme, setTheme] = useState('light');
 
     useEffect(() => {
-        loadTheme();
+        // Force light mode on mount
+        setTheme('light');
     }, []);
 
     const loadTheme = async () => {

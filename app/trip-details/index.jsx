@@ -189,8 +189,10 @@ export default function TripDetails() {
     );
   }
 
-  // Handle different JSON structures (some AI models wrap in travel_plan, others don't)
-  const tripPlan = tripDetails?.tripData?.travel_plan || tripDetails?.tripData?.trip_plan || tripDetails?.tripData;
+  // Handle different JSON structures (some AI models wrap in travel_plan/trip_plan)
+  // Priority: 1. tripPlan field (AI Output), 2. tripData field (Legacy/Fallback)
+  const sourceData = tripDetails?.tripPlan || tripDetails?.tripData;
+  const tripPlan = sourceData?.travel_plan || sourceData?.trip_plan || sourceData;
   const { locationInfo, startDate, traveler, budget } = tripDetails || {};
   const locationName = locationInfo?.name || tripPlan?.location || "Unknown Location";
 

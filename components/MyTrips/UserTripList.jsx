@@ -94,8 +94,8 @@ export default function UserTripList({ userTrips, onDeleteTrip, headerComponent,
             <UserTripCard
               trip={item}
               index={index}
-              onDelete={onDeleteTrip ? () => onDeleteTrip(item.docId) : null}
-              onPress={() => router.push({ pathname: '/trip-details', params: { docId: item.docId } })}
+              onDelete={onDeleteTrip ? () => onDeleteTrip(item.id) : null}
+              onPress={() => router.push({ pathname: '/trip-details', params: { docId: item.id } })}
             />
           )
         }}
