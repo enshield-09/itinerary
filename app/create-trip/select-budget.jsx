@@ -99,7 +99,7 @@ export default function SelectBudget() {
       </Animated.View>
 
       {/* Foreground UI (unchanged logic) */}
-      <View style={[styles.container, { backgroundColor: theme === 'dark' ? 'rgba(0,0,0,0.85)' : 'rgba(255,255,255,0.85)' }]}>
+      <View style={[styles.container, { backgroundColor: 'rgba(255,255,255,0.95)' }]}>
         <Text style={[styles.title, { color: colors.text }]}>Budget</Text>
 
         <View style={{ marginTop: 25, flex: 1 }}>
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontFamily: 'outfit',
     fontSize: 20,
-    color: Colors.GRAY
+    color: '#444'
   },
   continueButton: {
     padding: 18,

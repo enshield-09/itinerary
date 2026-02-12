@@ -326,57 +326,76 @@ export default function TripDetails() {
   );
 
   // Render Day Item for Vertical FlatList
-  const renderDayItem = ({ item, index }) => (
-    <View style={[styles.dayContainer, { marginHorizontal: 20 }]}>
-      <View style={[styles.dayBadge, { backgroundColor: colors.border }]}>
-        <Text style={[styles.dayText, { color: colors.text }]}>DAY {index + 1}</Text>
-      </View>
+  // Render Day Item for Vertical FlatList
+  const renderDayItem = ({ item, index }) => {
+    // Robustly extract activities array
+    let activities = [];
+    if (Array.isArray(item)) {
+      activities = item;
+    } else if (Array.isArray(item?.activities)) {
+      activities = item.activities;
+    } else if (Array.isArray(item?.plan)) {
+      activities = item.plan;
+    } else if (typeof item === 'object' && item !== null) {
+      // If item is a single activity object, wrap it
+      // Check if it's a "Day" object with no array? e.g. { day: 1, activity: "..." }
+      if (item.activity) activities = [item.activity];
+      else activities = [item];
+    }
 
-      {(Array.isArray(item.activities) ? item.activities : [item]).map((activity, idx) => {
-        const actName = typeof activity === 'string' ? activity : activity.name;
-        const actDesc = typeof activity === 'string' ? '' : activity.description;
-        const actTime = typeof activity === 'string' ? '' : (activity.time || 'Flexible');
-        if (!actName) return null;
+    return (
+      <View style={[styles.dayContainer, { marginHorizontal: 20 }]}>
+        <View style={[styles.dayBadge, { backgroundColor: colors.border }]}>
+          <Text style={[styles.dayText, { color: colors.text }]}>DAY {index + 1}</Text>
+        </View>
 
-        return (
-          <TouchableOpacity key={idx} activeOpacity={isEditing ? 0.7 : 1} onPress={() => isEditing && handleEditActivity(activity, index, idx)}>
-            <View style={[styles.activityCard, { backgroundColor: colors.card, borderColor: colors.border, shadowColor: colors.shadow }]}>
-              <NetworkImage
-                uri={images[actName]}
-                fallback={FALLBACK_ACTIVITY}
-                style={styles.activityImage}
-              />
-              <View style={styles.activityContent}>
-                <Text style={[styles.activityName, { color: colors.text }]}>{actName}</Text>
-                <Text style={[styles.activityDesc, { color: colors.icon }]} numberOfLines={2}>{actDesc}</Text>
-                <View style={styles.activityMeta}>
-                  <View style={[styles.metaItem, { backgroundColor: colors.border }]}>
-                    <Ionicons name="time-outline" size={12} color={colors.icon} />
-                    <Text style={[styles.metaText, { color: colors.icon }]}>{actTime}</Text>
+        {activities.map((activity, idx) => {
+          const actName = typeof activity === 'string' ? activity : activity?.name || activity?.placeName || activity?.activity;
+          const actDesc = typeof activity === 'string' ? '' : activity?.description || activity?.details || '';
+          const actTime = typeof activity === 'string' ? '' : (activity?.time || 'Flexible');
+
+          if (!actName) return null;
+
+          return (
+            <TouchableOpacity key={idx} activeOpacity={isEditing ? 0.7 : 1} onPress={() => isEditing && handleEditActivity(activity, index, idx)}>
+              <View style={[styles.activityCard, { backgroundColor: colors.card, borderColor: colors.border, shadowColor: colors.shadow }]}>
+                <NetworkImage
+                  uri={images[actName]}
+                  fallback={FALLBACK_ACTIVITY}
+                  style={styles.activityImage}
+                />
+                <View style={styles.activityContent}>
+                  <Text style={[styles.activityName, { color: colors.text }]}>{actName}</Text>
+                  <Text style={[styles.activityDesc, { color: colors.icon }]} numberOfLines={2}>{actDesc}</Text>
+                  <View style={styles.activityMeta}>
+                    <View style={[styles.metaItem, { backgroundColor: colors.border }]}>
+                      <Ionicons name="time-outline" size={12} color={colors.icon} />
+                      <Text style={[styles.metaText, { color: colors.icon }]}>{actTime}</Text>
+                    </View>
                   </View>
                 </View>
+                {isEditing && (
+                  <View style={{ position: 'absolute', right: 10, top: 10, flexDirection: 'row', gap: 10 }}>
+                    <Ionicons name="pencil" size={16} color={Colors.PRIMARY} />
+                    <TouchableOpacity onPress={(e) => { e.stopPropagation(); handleDeleteActivity(index, idx); }}>
+                      <Ionicons name="trash" size={18} color={Colors.RED} />
+                    </TouchableOpacity>
+                  </View>
+                )}
               </View>
-              {isEditing && (
-                <View style={{ position: 'absolute', right: 10, top: 10, flexDirection: 'row', gap: 10 }}>
-                  <Ionicons name="pencil" size={16} color={Colors.PRIMARY} />
-                  <TouchableOpacity onPress={(e) => { e.stopPropagation(); handleDeleteActivity(index, idx); }}>
-                    <Ionicons name="trash" size={18} color={Colors.RED} />
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
-          </TouchableOpacity>
-        );
-      })}
+            </TouchableOpacity>
+          );
+        })}
 
-      {isEditing && (
-        <TouchableOpacity style={[styles.addActivityButton, { backgroundColor: colors.card }]} onPress={() => handleAddActivity(index)}>
-          <Ionicons name="add" size={20} color={Colors.PRIMARY} />
-          <Text style={styles.addActivityText}>Add Activity</Text>
-        </TouchableOpacity>
-      )}
-    </View>
-  );
+        {isEditing && (
+          <TouchableOpacity style={[styles.addActivityButton, { backgroundColor: colors.card }]} onPress={() => handleAddActivity(index)}>
+            <Ionicons name="add" size={20} color={Colors.PRIMARY} />
+            <Text style={styles.addActivityText}>Add Activity</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    );
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -709,11 +728,12 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 2,
     borderWidth: 1,
-    borderColor: '#f0f0f0'
+    borderColor: '#f0f0f0',
+    minHeight: 120, // Ensure minimum height
   },
   activityImage: {
     width: 110,
-    height: '100%',
+    height: 120, // Fixed height matching min card height
   },
   activityContent: {
     flex: 1,
