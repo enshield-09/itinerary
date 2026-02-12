@@ -100,6 +100,60 @@ export default function TripDetails() {
     }
   };
 
+  useEffect(() => {
+    if (tripDetails) {
+      const sourceData = tripDetails?.tripPlan || tripDetails?.tripData;
+      const plan = sourceData?.travel_plan || sourceData?.trip_plan || sourceData;
+      if (plan) fetchActivityImages(plan);
+    }
+  }, [tripDetails]);
+
+  const fetchActivityImages = async (plan) => {
+    const activitiesToFetch = [];
+    // Collect all activity names
+    plan?.daily_plan?.forEach(day => {
+      let acts = [];
+      if (Array.isArray(day)) acts = day;
+      else if (Array.isArray(day?.activities)) acts = day.activities;
+      else if (typeof day === 'object' && day.activity) acts = [day.activity];
+
+      acts.forEach(act => {
+        const name = typeof act === 'string' ? act : act?.name || act?.placeName;
+        if (name && !images[name]) activitiesToFetch.push(name);
+      });
+    });
+
+    // Fetch specifically for Hotels too if missing
+    plan?.hotels?.forEach(hotel => {
+      if (hotel.name && !images[hotel.name]) activitiesToFetch.push(hotel.name);
+    });
+
+    // Limit to avoid rate limits/spam (e.g. first 10)
+    const uniqueActs = [...new Set(activitiesToFetch)].slice(0, 15);
+
+    uniqueActs.forEach(async (name) => {
+      try {
+        const response = await fetch('https://places.googleapis.com/v1/places:searchText', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY,
+            'X-Goog-FieldMask': 'places.photos'
+          },
+          body: JSON.stringify({ textQuery: name })
+        });
+        const result = await response.json();
+        const photoName = result?.places?.[0]?.photos?.[0]?.name;
+        if (photoName) {
+          const url = `https://places.googleapis.com/v1/${photoName}/media?maxHeightPx=400&maxWidthPx=400&key=${process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY}`;
+          setImages(prev => ({ ...prev, [name]: url }));
+        }
+      } catch (e) {
+        console.log("Error fetching image for", name, e);
+      }
+    });
+  };
+
   // Helper functions
   const openLink = (url) => { if (url) Linking.openURL(url); };
   const generateFlightBookingUrl = (dest) => `https://www.google.com/travel/flights?tfs=${dest}`;
@@ -357,7 +411,22 @@ export default function TripDetails() {
           if (!actName) return null;
 
           return (
-            <TouchableOpacity key={idx} activeOpacity={isEditing ? 0.7 : 1} onPress={() => isEditing && handleEditActivity(activity, index, idx)}>
+            <TouchableOpacity
+              key={idx}
+              activeOpacity={0.7}
+              onPress={() => {
+                if (isEditing) {
+                  handleEditActivity(activity, index, idx);
+                } else {
+                  // Open in Google Maps
+                  const query = activity?.geo_coordinates
+                    ? `${activity.geo_coordinates.latitude},${activity.geo_coordinates.longitude}`
+                    : actName;
+                  const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+                  Linking.openURL(url);
+                }
+              }}
+            >
               <View style={[styles.activityCard, { backgroundColor: colors.card, borderColor: colors.border, shadowColor: colors.shadow }]}>
                 <NetworkImage
                   uri={images[actName]}
@@ -371,6 +440,10 @@ export default function TripDetails() {
                     <View style={[styles.metaItem, { backgroundColor: colors.border }]}>
                       <Ionicons name="time-outline" size={12} color={colors.icon} />
                       <Text style={[styles.metaText, { color: colors.icon }]}>{actTime}</Text>
+                    </View>
+                    <View style={[styles.metaItem, { backgroundColor: colors.border, marginLeft: 5 }]}>
+                      <Ionicons name="location-outline" size={12} color={colors.icon} />
+                      <Text style={[styles.metaText, { color: colors.icon }]}>Map</Text>
                     </View>
                   </View>
                 </View>
