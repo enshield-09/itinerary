@@ -6,7 +6,7 @@ import { useState } from 'react';
 import Colors from '../../constants/Colors';
 import { useTheme } from '../../context/ThemeContext';
 
-const API_KEY = 'AIzaSyBNiTVqT-LJpDzl5i2WlVuYtUsK8yMF7Oc';
+const API_KEY = process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY;
 
 export default function UserTripCard({ trip, onDelete, index = 0, onPress }) {
   const [imageError, setImageError] = useState(false);

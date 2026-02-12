@@ -202,7 +202,7 @@ export default function TripDetails() {
       <Animated.View style={{ opacity: fadeAnim }}>
         <View style={styles.imageContainer}>
           <NetworkImage
-            uri={locationInfo?.photoRef ? `https://places.googleapis.com/v1/${locationInfo.photoRef}/media?maxHeightPx=800&maxWidthPx=800&key=${process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY}` : null}
+            uri={locationInfo?.photoRef ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photoreference=${locationInfo.photoRef}&key=${process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY}` : null}
             fallback={require('../../assets/images/paris.jpg')}
             style={styles.mainImage}
           />

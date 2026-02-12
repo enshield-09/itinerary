@@ -87,6 +87,7 @@ export default function MyTrip() {
             try {
               await deleteDoc(doc(db, "ItineraryApp", tripId));
               setUserTrips(prev => prev.filter(trip => trip.id !== tripId));
+              GetMyTrips(); // Force refresh to ensure sync
             } catch (error) {
               console.error("Error deleting trip:", error);
               Alert.alert("Error", "Failed to delete trip.");
