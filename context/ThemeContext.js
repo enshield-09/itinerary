@@ -6,8 +6,7 @@ import { Colors } from '../constants/theme';
 export const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
-    const systemScheme = useColorScheme();
-    const [theme, setTheme] = useState(systemScheme || 'light');
+    const [theme, setTheme] = useState('light');
 
     useEffect(() => {
         loadTheme();
